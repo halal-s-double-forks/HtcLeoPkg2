@@ -462,9 +462,12 @@ void sdcc_controller_init(sd_parms_t *sd)
 /* Called during each scan of mmc devices */
 int sdcc_init(mmc_t *mmc)
 {
+    DEBUG((EFI_D_ERROR, "Sdcc init!!!\n"));
     sd_parms_t *sd = (sd_parms_t*)(mmc->priv);
 
 #ifdef USE_PROC_COMM
+    DEBUG((EFI_D_ERROR, "Sdcc init using pcom!\n"));
+    for(;;){};//we're getting here for sure :-)
 	// Switch on sd card power. The voltage regulator used is board specific
 	pcom_sdcard_power(1); //enable
 	
@@ -475,6 +478,7 @@ int sdcc_init(mmc_t *mmc)
     pcom_set_sdcard_clk(sd->instance, MCLK_400KHz);
     pcom_enable_sdcard_clk(sd->instance);
 #else
+    DEBUG((EFI_D_ERROR, "Sdcc init not using pcom!\n"));
     // Set the interface clock
 	if (sd->instance == 1) {
 		clk_set_rate(SDC1_CLK, MCLK_400KHz);

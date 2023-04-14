@@ -29,6 +29,7 @@
   AdmLib
   MsmPcomLib
   MsmPcomClientLib
+  TimerLib
 
 [Pcd]
 

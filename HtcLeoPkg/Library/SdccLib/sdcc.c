@@ -467,16 +467,20 @@ int sdcc_init(mmc_t *mmc)
 
 #ifdef USE_PROC_COMM
     DEBUG((EFI_D_ERROR, "Sdcc init using pcom!\n"));
+    MicroSecondDelay(2000000);
 	// Switch on sd card power. The voltage regulator used is board specific
     DEBUG((EFI_D_ERROR, "Switch on sd card power\n"));
+    MicroSecondDelay(2000000);
 	pcom_sdcard_power(1); //enable
 	
     // Enable clock
     DEBUG((EFI_D_ERROR, "Enable clock\n"));
+    MicroSecondDelay(2000000);
     pcom_enable_sdcard_pclk(sd->instance);
 
     // Set the interface clock
     DEBUG((EFI_D_ERROR, "Set the interface clock\n"));
+    MicroSecondDelay(2000000);
     pcom_set_sdcard_clk(sd->instance, MCLK_400KHz);
     pcom_enable_sdcard_clk(sd->instance);
 #else
@@ -497,13 +501,16 @@ int sdcc_init(mmc_t *mmc)
 #endif
 	// GPIO config
     DEBUG((EFI_D_ERROR, "GPIO config!\n"));
+    MicroSecondDelay(2000000);//(2000*1000);
 	pcom_sdcard_gpio_config(sd->instance);
 	
     // Initialize controller
     DEBUG((EFI_D_ERROR, "SDCC controler init!\n"));
+    MicroSecondDelay(2000000);
     sdcc_controller_init(sd);
 
     DEBUG((EFI_D_ERROR, "SDCC controler init DONE\n"));
+    MicroSecondDelay(2000000);
 	mmc_is_ready = 1;
 	
     return 0;

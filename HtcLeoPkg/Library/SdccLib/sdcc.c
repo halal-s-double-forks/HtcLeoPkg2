@@ -113,6 +113,9 @@ int sdcc_read_data_cleanup(mmc_t *mmc)
 /* Read data from controller fifo */
 int sdcc_read_data(mmc_t *mmc, mmc_cmd_t *cmd, mmc_data_t *data)
 {
+    DEBUG((EFI_D_ERROR, "Start sdcc_read_data()\n"));
+	MicroSecondDelay(2000000);
+
     UINT32 status;
     UINT16 byte_count   = 0;
     UINT32 *dest_ptr    = (UINT32 *)(data->dest);
@@ -120,6 +123,8 @@ int sdcc_read_data(mmc_t *mmc, mmc_cmd_t *cmd, mmc_data_t *data)
     UINT32 adm_crci_num = ((sd_parms_t*)(mmc->priv))->adm_crci_num; //  ADM CRCI number
 
     if(sdcc_use_dm) {
+        DEBUG((EFI_D_ERROR, "sdcc_read_data: sdcc_use_dm\n"));
+		MicroSecondDelay(2000000);
         UINT32 num_rows;
         UINT32 addr_shft;
         UINT32 rows_per_block;
@@ -151,13 +156,19 @@ int sdcc_read_data(mmc_t *mmc, mmc_cmd_t *cmd, mmc_data_t *data)
             sd_box_mode_entry[5] = ((0 << 16) | (SDCC_FIFO_SIZE << 0)); // SRC/DST offset
             
 			// Initialize the DM Command Pointer List (single entry)
+            DEBUG((EFI_D_ERROR, "Initialize the DM Command Pointer List (single entry)\n"));
+		    MicroSecondDelay(2000000);
             addr_shft = ((UINT32)(&sd_box_mode_entry[0])) >> 3;
             sd_adm_cmd_ptr_list[0] = (ADM_CMD_PTR_LP | ADM_CMD_PTR_CMD_LIST | addr_shft);
 
             // Start ADM transfer, this transfer waits until it finishes
             // before returing
+            DEBUG((EFI_D_ERROR, "Start ADM transfer\n"));
+		    MicroSecondDelay(2000000);
             if (adm_start_transfer(ADM_AARM_SD_CHN, sd_adm_cmd_ptr_list) != 0) {
                return SDCC_ERR_DATA_ADM_ERR;
+               DEBUG((EFI_D_ERROR, "ADM transfer failed...\n"));
+		       MicroSecondDelay(2000000);
             }
             // Add the amount we have transfered to the destination
             tx_dst += (tx_size*row_len);
@@ -179,6 +190,8 @@ int sdcc_read_data(mmc_t *mmc, mmc_cmd_t *cmd, mmc_data_t *data)
         }
     }
 	
+    DEBUG((EFI_D_ERROR, "sdcc_read_data: call sdcc_read_data_cleanup()\n"));
+	MicroSecondDelay(2000000);
     return sdcc_read_data_cleanup(mmc);
 }
 
@@ -455,36 +468,24 @@ void sdcc_controller_init(sd_parms_t *sd)
     mci_clk = MCI_CLK__FLOW_ENA___M
 			|(MCI_CLK__SELECT_IN__ON_THE_FALLING_EDGE_OF_MCICLOCK << MCI_CLK__SELECT_IN___S)
 			| MCI_CLK__ENABLE___M;
-
     writel(mci_clk, sd->base + MCI_CLK);
 }
 
 /* Called during each scan of mmc devices */
 int sdcc_init(mmc_t *mmc)
 {
-    DEBUG((EFI_D_ERROR, "Sdcc init!!!\n"));
     sd_parms_t *sd = (sd_parms_t*)(mmc->priv);
 
 #ifdef USE_PROC_COMM
-    DEBUG((EFI_D_ERROR, "Sdcc init using pcom!\n"));
-    MicroSecondDelay(2000000);
-	// Switch on sd card power. The voltage regulator used is board specific
-    DEBUG((EFI_D_ERROR, "Switch on sd card power\n"));
-    MicroSecondDelay(2000000);
 	pcom_sdcard_power(1); //enable
 	
     // Enable clock
-    DEBUG((EFI_D_ERROR, "Enable clock\n"));
-    MicroSecondDelay(2000000);
     pcom_enable_sdcard_pclk(sd->instance);
 
     // Set the interface clock
-    DEBUG((EFI_D_ERROR, "Set the interface clock\n"));
-    MicroSecondDelay(2000000);
     pcom_set_sdcard_clk(sd->instance, MCLK_400KHz);
     pcom_enable_sdcard_clk(sd->instance);
 #else
-    DEBUG((EFI_D_ERROR, "Sdcc init not using pcom!\n"));
     // Set the interface clock
 	if (sd->instance == 1) {
 		clk_set_rate(SDC1_CLK, MCLK_400KHz);
@@ -500,17 +501,10 @@ int sdcc_init(mmc_t *mmc)
 	}
 #endif
 	// GPIO config
-    DEBUG((EFI_D_ERROR, "GPIO config!\n"));
-    MicroSecondDelay(2000000);//(2000*1000);
 	pcom_sdcard_gpio_config(sd->instance);
 	
     // Initialize controller
-    DEBUG((EFI_D_ERROR, "SDCC controler init!\n"));
-    MicroSecondDelay(2000000);
     sdcc_controller_init(sd);
-
-    DEBUG((EFI_D_ERROR, "SDCC controler init DONE\n"));
-    MicroSecondDelay(2000000);
 	mmc_is_ready = 1;
 	
     return 0;

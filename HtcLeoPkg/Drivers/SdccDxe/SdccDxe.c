@@ -287,43 +287,57 @@ MMCHSInitialize(
 	}
 	
 	//gMMCHSMedia.LastBlock = (UINT64)((mmc_card.capacity / 512) - 1);
+	DEBUG((EFI_D_ERROR, "Sdcc init DONE!\n"));
 
 	{
 		UINT32 blocksize;
 		blocksize = 512;//mmc_get_device_blocksize();
 
-		DEBUG((EFI_D_INFO, "eMMC Block Size:%d\n", blocksize));
+		DEBUG((EFI_D_ERROR, "eMMC Block Size:%d\n", blocksize));
 
 		VOID * data;
 
 		Status = gBS->AllocatePool(EfiBootServicesData, (blocksize), &data);
 
 		if (EFI_ERROR(Status)) {
-			DEBUG((EFI_D_INFO, "test memory alloc failed!\n"));
+			DEBUG((EFI_D_ERROR, "test memory alloc failed!\n"));
 			return Status;
 		}
 
 		int ret = 0;
 		//ret = mmc_read(blocksize, (UINT32 *)data, blocksize);
-		ret = sdcc_read_data(mmc, cmd, data);
+		DEBUG((EFI_D_ERROR, "SdccDxe: Start sdcc_read_data\n"));
+
+		ret = sdcc_read_data(mmc, cmd, data);//returns -8
 		
 		if (ret != MMC_BOOT_E_SUCCESS)
 		{
-			DEBUG((EFI_D_INFO, "mmc_read failed! ret = %d\n", ret));
+			DEBUG((EFI_D_ERROR, "mmc_read failed! ret = %d\n", ret));
+			MicroSecondDelay(2000000);
 			return EFI_DEVICE_ERROR;
 		}
 
+		DEBUG((EFI_D_ERROR, "mmc_read succeeded! ret = %d\n", ret));
+		MicroSecondDelay(2000000);
+
 		UINT8 * STR = (UINT8 *)data;
 
-		DEBUG((EFI_D_INFO, "First 8 Bytes = %c%c%c%c%c%c%c%c\n", STR[0], STR[1], STR[2], STR[3], STR[4], STR[5], STR[6], STR[7]));
+		DEBUG((EFI_D_ERROR, "First 8 Bytes = %c%c%c%c%c%c%c%c\n", STR[0], STR[1], STR[2], STR[3], STR[4], STR[5], STR[6], STR[7]));
+		MicroSecondDelay(2000000);
 
-
+		DEBUG((EFI_D_ERROR, "FreePool()\n"));
+		MicroSecondDelay(2000000);
 
 		Status = gBS->FreePool(data);
+
+		DEBUG((EFI_D_ERROR, "We should be good to go\n"));
+		MicroSecondDelay(2000000);
 	}
 
 
 	//Publish BlockIO.
+	DEBUG((EFI_D_ERROR, "Publish the BlockIO protocol\n"));
+	MicroSecondDelay(2000000);
 	Status = gBS->InstallMultipleProtocolInterfaces(
 		&ImageHandle,
 		&gEfiBlockIoProtocolGuid, &gBlockIo,

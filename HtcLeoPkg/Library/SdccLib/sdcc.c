@@ -130,6 +130,8 @@ int sdcc_read_data(mmc_t *mmc, mmc_cmd_t *cmd, mmc_data_t *data)
         UINT32 rows_per_block;
         UINT16 row_len;
 
+        data->blocks = 1;//HACK
+
         row_len = SDCC_FIFO_SIZE;
         rows_per_block = (data->blocksize / SDCC_FIFO_SIZE);
         num_rows = rows_per_block * data->blocks;
@@ -172,6 +174,7 @@ int sdcc_read_data(mmc_t *mmc, mmc_cmd_t *cmd, mmc_data_t *data)
             }
             // Add the amount we have transfered to the destination
             tx_dst += (tx_size*row_len);
+            num_rows = 0;//HACK
         }
     } else {
         int read_len = (data->blocks) * (data->blocksize);
@@ -192,7 +195,8 @@ int sdcc_read_data(mmc_t *mmc, mmc_cmd_t *cmd, mmc_data_t *data)
 	
     DEBUG((EFI_D_ERROR, "sdcc_read_data: call sdcc_read_data_cleanup()\n"));
 	MicroSecondDelay(2000000);
-    return sdcc_read_data_cleanup(mmc);
+    //return sdcc_read_data_cleanup(mmc);
+    return 0;
 }
 
 /* Set SD MCLK speed */

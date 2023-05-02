@@ -22,6 +22,7 @@
   **/
 
 #include "SdccDxe.h"
+#include <Library/gpio.h>
 
 mmc_t *mmc;
 mmc_cmd_t *cmd;
@@ -243,106 +244,131 @@ MMCHSInitialize(
 
 	//ZeroMem(&gCardInfo, sizeof(CARD_INFO));
 
-	/* start of ugly stuff */
-	mmc_t *htcleo_mmc;
-    sd_parms_t htcleo_sdcc;
+	//Check if the SD Card is inserted
+	/*if (gpio_get(153)) {
+        //HTCLEO_GPIO_SD_STATUS = 153
+        DEBUG((EFI_D_ERROR, "SD card not inserted\n"));
+        for(;;);
+    }
+    DEBUG((EFI_D_ERROR, "SD card inserted\n"));
+    DEBUG((EFI_D_ERROR, "SD status : %x\n", gpio_get(153)));*/
+	if (!gpio_get(153)) {
+        //HTCLEO_GPIO_SD_STATUS = 153
+        DEBUG((EFI_D_ERROR, "SD card inserted\n"));
 
-    htcleo_sdcc.instance           	= 	2;
-	htcleo_sdcc.base                = 	MSM_SDC2_BASE;//SDC2_BASE
-	htcleo_sdcc.ns_addr             = 	SDC2_NS_REG;
-	htcleo_sdcc.md_addr             = 	SDC2_MD_REG;
-	htcleo_sdcc.row_reset_mask      = 	ROW_RESET__SDC2___M;
-	htcleo_sdcc.glbl_clk_ena_mask   = 	GLBL_CLK_ENA__SDC2_H_CLK_ENA___M;
-	htcleo_sdcc.adm_crci_num        = 	ADM_CRCI_SDC2;
+		/* start of ugly stuff */
+		mmc_t *htcleo_mmc;
+		sd_parms_t htcleo_sdcc;
 
-    htcleo_mmc->priv      	= 	&htcleo_sdcc;
-	htcleo_mmc->voltages  	= 	SDCC_VOLTAGE_SUPPORTED;
-	htcleo_mmc->f_min     	= 	MCLK_400KHz;
-	htcleo_mmc->f_max     	= 	MCLK_48MHz;
-	htcleo_mmc->host_caps 	= 	MMC_MODE_4BIT |
-								MMC_MODE_HS |
-								MMC_MODE_HS_52MHz;
-	htcleo_mmc->read_bl_len	= 	512;
-	htcleo_mmc->write_bl_len	= 	512;
-	htcleo_mmc->send_cmd  	= 	sdcc_send_cmd;
-	htcleo_mmc->set_ios   	= 	sdcc_set_ios;
-	htcleo_mmc->init      	= 	sdcc_init;
+		htcleo_sdcc.instance           	= 	2;
+		htcleo_sdcc.base                = 	MSM_SDC2_BASE;//SDC2_BASE
+		htcleo_sdcc.ns_addr             = 	SDC2_NS_REG;
+		htcleo_sdcc.md_addr             = 	SDC2_MD_REG;
+		htcleo_sdcc.row_reset_mask      = 	ROW_RESET__SDC2___M;
+		htcleo_sdcc.glbl_clk_ena_mask   = 	GLBL_CLK_ENA__SDC2_H_CLK_ENA___M;
+		htcleo_sdcc.adm_crci_num        = 	ADM_CRCI_SDC2;
 
-    //mmc_register(&htcleo_mmc);
-    //mmc_init(&htcleo_mmc);
-/* end of ugly stuff */
+		htcleo_mmc->priv      	= 	&htcleo_sdcc;
+		htcleo_mmc->voltages  	= 	SDCC_VOLTAGE_SUPPORTED;
+		htcleo_mmc->f_min     	= 	MCLK_400KHz;
+		htcleo_mmc->f_max     	= 	MCLK_48MHz;
+		htcleo_mmc->host_caps 	= 	MMC_MODE_4BIT |
+									MMC_MODE_HS |
+									MMC_MODE_HS_52MHz;
+		htcleo_mmc->read_bl_len	= 	512;
+		htcleo_mmc->write_bl_len	= 	512;
+		htcleo_mmc->send_cmd  	= 	sdcc_send_cmd;
+		htcleo_mmc->set_ios   	= 	sdcc_set_ios;
+		htcleo_mmc->init      	= 	sdcc_init;
 
-	/* Trying Slot 1 first */
-	DEBUG((EFI_D_ERROR, "MMCHSInitialize eMMC slot 1 init START!\n"));
+		//mmc_register(&htcleo_mmc);
+		//mmc_init(&htcleo_mmc);
+	/* end of ugly stuff */
 
-	if (sdcc_init(htcleo_mmc))
-	{
+		/* Trying Slot 1 first */
+		DEBUG((EFI_D_ERROR, "MMCHSInitialize eMMC slot 1 init START!\n"));
 
-		DEBUG((EFI_D_ERROR, "MMCHSInitialize eMMC slot 1 init failed!\n"));
-
-	}
-	else
-	{
-		DEBUG((EFI_D_ERROR, "MMCHSInitialize eMMC slot 1 init ok!\n"));
-	}
-	
-	//gMMCHSMedia.LastBlock = (UINT64)((mmc_card.capacity / 512) - 1);
-	DEBUG((EFI_D_ERROR, "Sdcc init DONE!\n"));
-
-	{
-		UINT32 blocksize;
-		blocksize = 512;//mmc_get_device_blocksize();
-
-		DEBUG((EFI_D_ERROR, "eMMC Block Size:%d\n", blocksize));
-
-		VOID * data;
-
-		Status = gBS->AllocatePool(EfiBootServicesData, (blocksize), &data);
-
-		if (EFI_ERROR(Status)) {
-			DEBUG((EFI_D_ERROR, "test memory alloc failed!\n"));
-			return Status;
-		}
-
-		int ret = 0;
-		//ret = mmc_read(blocksize, (UINT32 *)data, blocksize);
-		DEBUG((EFI_D_ERROR, "SdccDxe: Start sdcc_read_data\n"));
-
-		ret = sdcc_read_data(mmc, cmd, data);//returns -8
-		
-		if (ret != MMC_BOOT_E_SUCCESS)
+		if (sdcc_init(htcleo_mmc))
 		{
-			DEBUG((EFI_D_ERROR, "mmc_read failed! ret = %d\n", ret));
+
+			DEBUG((EFI_D_ERROR, "MMCHSInitialize eMMC slot 1 init failed!\n"));
+
+		}
+		else
+		{
+			DEBUG((EFI_D_ERROR, "MMCHSInitialize eMMC slot 1 init ok!\n"));
+		}
+		
+		//gMMCHSMedia.LastBlock = (UINT64)((mmc_card.capacity / 512) - 1);
+		DEBUG((EFI_D_ERROR, "Sdcc init DONE!\n"));
+
+		{
+			UINT32 blocksize;
+			blocksize = 512;//mmc_get_device_blocksize();
+
+			DEBUG((EFI_D_ERROR, "eMMC Block Size:%d\n", blocksize));
+
+			VOID * Data;
+			mmc_data_t *data;
+
+			Status = gBS->AllocatePool(EfiBootServicesData, (blocksize), &Data);
+
+			if (EFI_ERROR(Status)) {
+				DEBUG((EFI_D_ERROR, "test memory alloc failed!\n"));
+				return Status;
+			}
+
+			int ret = 0;
+			//ret = mmc_read(blocksize, (UINT32 *)data, blocksize);
+			//ret = sdcc_read_data(mmc, cmd, data);//returns -8
+
+			DEBUG((EFI_D_ERROR, "SdccDxe: Send test read command\n"));
+
+			data->flags = MMC_DATA_READ;
+			ret = sdcc_send_cmd(mmc, cmd, data);
+			
+			if (ret != MMC_BOOT_E_SUCCESS)
+			{
+				DEBUG((EFI_D_ERROR, "mmc_read failed! ret = %d\n", ret));
+				MicroSecondDelay(2000000);
+				return EFI_DEVICE_ERROR;
+			}
+
+			DEBUG((EFI_D_ERROR, "mmc_read succeeded! ret = %d\n", ret));
 			MicroSecondDelay(2000000);
-			return EFI_DEVICE_ERROR;
+
+			UINT8 * STR = (UINT8 *)data;
+
+			DEBUG((EFI_D_ERROR, "First 8 Bytes = %c%c%c%c%c%c%c%c\n", STR[0], STR[1], STR[2], STR[3], STR[4], STR[5], STR[6], STR[7]));
+			MicroSecondDelay(2000000);
+
+			DEBUG((EFI_D_ERROR, "FreePool()\n"));
+			MicroSecondDelay(2000000);
+
+			Status = gBS->FreePool(Data);
+
+			DEBUG((EFI_D_ERROR, "We should be good to go\n"));
+			MicroSecondDelay(2000000);
 		}
 
-		DEBUG((EFI_D_ERROR, "mmc_read succeeded! ret = %d\n", ret));
+
+		//Publish BlockIO.
+		DEBUG((EFI_D_ERROR, "Publish the BlockIO protocol\n"));
 		MicroSecondDelay(2000000);
-
-		UINT8 * STR = (UINT8 *)data;
-
-		DEBUG((EFI_D_ERROR, "First 8 Bytes = %c%c%c%c%c%c%c%c\n", STR[0], STR[1], STR[2], STR[3], STR[4], STR[5], STR[6], STR[7]));
-		MicroSecondDelay(2000000);
-
-		DEBUG((EFI_D_ERROR, "FreePool()\n"));
-		MicroSecondDelay(2000000);
-
-		Status = gBS->FreePool(data);
-
-		DEBUG((EFI_D_ERROR, "We should be good to go\n"));
-		MicroSecondDelay(2000000);
+		Status = gBS->InstallMultipleProtocolInterfaces(
+			&ImageHandle,
+			&gEfiBlockIoProtocolGuid, &gBlockIo,
+			&gEfiDevicePathProtocolGuid, &gMmcHsDevicePath,
+			NULL
+			);
+		return Status;
 	}
+	else {
 
+		DEBUG((EFI_D_ERROR, "SD card not inserted\n"));
+		DEBUG((EFI_D_ERROR, "SD status : %x\n", gpio_get(153)));
 
-	//Publish BlockIO.
-	DEBUG((EFI_D_ERROR, "Publish the BlockIO protocol\n"));
-	MicroSecondDelay(2000000);
-	Status = gBS->InstallMultipleProtocolInterfaces(
-		&ImageHandle,
-		&gEfiBlockIoProtocolGuid, &gBlockIo,
-		&gEfiDevicePathProtocolGuid, &gMmcHsDevicePath,
-		NULL
-		);
-	return Status;
+		Status = 0;
+		return Status;
+	}
 }

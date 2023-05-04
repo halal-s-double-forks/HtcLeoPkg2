@@ -468,7 +468,7 @@ int  sdcc_init(mmc_t *mmc);
 void sdcc_set_ios(mmc_t *mmc);
 int  sdcc_send_cmd(mmc_t *mmc, mmc_cmd_t *cmd, mmc_data_t *data);
 
-int   mmc_init(mmc_t *mmc);
+//int   mmc_init(mmc_t *mmc);
 int   mmc_register(mmc_t *mmc);
 ulong mmc_bread(int dev_num, ulong blknr, ulong blkcnt, void *dst);
 
@@ -488,3 +488,13 @@ SdccLibInitialize(
 );
 
 int sdcc_read_data(mmc_t *mmc, mmc_cmd_t *cmd, mmc_data_t *data);
+int mmc_read_blocks(struct mmc *mmc, void *dst, int start, int blkcnt);
+
+
+int sdcc_check_status(mmc_t *mmc);
+static int mmc_send_cmd(uint16_t cmd, uint32_t arg, uint32_t response[]);
+int card_identification_selection(uint32_t cid[], uint16_t* rca, uint8_t* num_of_io_func);
+int mmc_init();
+
+/* New SD card driver definitions */
+uint32_t sd_init()

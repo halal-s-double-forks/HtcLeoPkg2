@@ -131,7 +131,7 @@ MMCHSReadBlocks(
 	OldTpl = gBS->RaiseTPL(TPL_NOTIFY);
 
 	//ret = mmc_read(gMMCHSMedia.BlockSize * Lba, (UINT32 *)Buffer,BufferSize);
-	ret = sdcc_read_data(mmc, cmd, data);
+	ret = mmc_read_blocks(mmc, &Buffer, 512 * Lba, BufferSize);//struct mmc *mmc, void *dst, int start, int blkcnt
 	
 	if(ret != MMC_BOOT_E_SUCCESS)
 	{
@@ -241,18 +241,8 @@ MMCHSInitialize(
 )
 {
 	EFI_STATUS  Status;
-
-	//ZeroMem(&gCardInfo, sizeof(CARD_INFO));
-
-	//Check if the SD Card is inserted
-	/*if (gpio_get(153)) {
-        //HTCLEO_GPIO_SD_STATUS = 153
-        DEBUG((EFI_D_ERROR, "SD card not inserted\n"));
-        for(;;);
-    }
-    DEBUG((EFI_D_ERROR, "SD card inserted\n"));
-    DEBUG((EFI_D_ERROR, "SD status : %x\n", gpio_get(153)));*/
-	if (!gpio_get(153)) {
+//!gpio_get(153)
+	if (1) {
         //HTCLEO_GPIO_SD_STATUS = 153
         DEBUG((EFI_D_ERROR, "SD card inserted\n"));
 
@@ -300,7 +290,7 @@ MMCHSInitialize(
 		}
 		
 		//gMMCHSMedia.LastBlock = (UINT64)((mmc_card.capacity / 512) - 1);
-		DEBUG((EFI_D_ERROR, "Sdcc init DONE!\n"));
+		//DEBUG((EFI_D_ERROR, "Sdcc init DONE!\n"));
 
 		{
 			UINT32 blocksize;
@@ -309,7 +299,7 @@ MMCHSInitialize(
 			DEBUG((EFI_D_ERROR, "eMMC Block Size:%d\n", blocksize));
 
 			VOID * Data;
-			mmc_data_t *data;
+			//mmc_data_t *data;
 
 			Status = gBS->AllocatePool(EfiBootServicesData, (blocksize), &Data);
 
@@ -322,10 +312,20 @@ MMCHSInitialize(
 			//ret = mmc_read(blocksize, (UINT32 *)data, blocksize);
 			//ret = sdcc_read_data(mmc, cmd, data);//returns -8
 
-			DEBUG((EFI_D_ERROR, "SdccDxe: Send test read command\n"));
+			DEBUG((EFI_D_ERROR, "First try to init SD after initing the controller\n"));
+			if(mmc_init()) {
+					DEBUG((EFI_D_ERROR, "SD init unsuccesfull, wait forever\n"));
+					for(;;){};
+			}
 
-			data->flags = MMC_DATA_READ;
-			ret = sdcc_send_cmd(mmc, cmd, data);
+			sdcc_check_status(mmc);
+
+			DEBUG((EFI_D_ERROR, "Test function end, wait forever\n"));
+			for(;;);
+
+			DEBUG((EFI_D_ERROR, "SdccDxe: Test block read\n"));
+
+			ret = mmc_read_blocks(mmc, &Data, 512, 1);//struct mmc *mmc, void *dst, int start, int blkcnt
 			
 			if (ret != MMC_BOOT_E_SUCCESS)
 			{
@@ -337,7 +337,7 @@ MMCHSInitialize(
 			DEBUG((EFI_D_ERROR, "mmc_read succeeded! ret = %d\n", ret));
 			MicroSecondDelay(2000000);
 
-			UINT8 * STR = (UINT8 *)data;
+			UINT8 * STR = (UINT8 *)Data;
 
 			DEBUG((EFI_D_ERROR, "First 8 Bytes = %c%c%c%c%c%c%c%c\n", STR[0], STR[1], STR[2], STR[3], STR[4], STR[5], STR[6], STR[7]));
 			MicroSecondDelay(2000000);

@@ -24,10 +24,6 @@
 #include "SdccDxe.h"
 #include <Library/gpio.h>
 
-mmc_t *mmc;
-mmc_cmd_t *cmd;
-mmc_data_t *data;
-
 EFI_BLOCK_IO_MEDIA gMMCHSMedia = 
 {
 	SIGNATURE_32('e', 'm', 'm', 'c'),         // MediaId
@@ -66,7 +62,6 @@ MMCHS_DEVICE_PATH gMmcHsDevicePath =
 		}
 	}
 };
-
 
 
 /**
@@ -130,13 +125,12 @@ MMCHSReadBlocks(
 
 	OldTpl = gBS->RaiseTPL(TPL_NOTIFY);
 
-	//ret = mmc_read(gMMCHSMedia.BlockSize * Lba, (UINT32 *)Buffer,BufferSize);
-	ret = mmc_read_blocks(mmc, &Buffer, 512 * Lba, BufferSize);//struct mmc *mmc, void *dst, int start, int blkcnt
+
 	
-	if(ret != MMC_BOOT_E_SUCCESS)
+	/*if(ret != MMC_BOOT_E_SUCCESS)
 	{
 		Status = EFI_DEVICE_ERROR;
-	}
+	}*/
 
 	gBS->RestoreTPL(OldTpl);
 	
@@ -246,39 +240,10 @@ MMCHSInitialize(
         //HTCLEO_GPIO_SD_STATUS = 153
         DEBUG((EFI_D_ERROR, "SD card inserted\n"));
 
-		/* start of ugly stuff */
-		mmc_t *htcleo_mmc;
-		sd_parms_t htcleo_sdcc;
-
-		htcleo_sdcc.instance           	= 	2;
-		htcleo_sdcc.base                = 	MSM_SDC2_BASE;//SDC2_BASE
-		htcleo_sdcc.ns_addr             = 	SDC2_NS_REG;
-		htcleo_sdcc.md_addr             = 	SDC2_MD_REG;
-		htcleo_sdcc.row_reset_mask      = 	ROW_RESET__SDC2___M;
-		htcleo_sdcc.glbl_clk_ena_mask   = 	GLBL_CLK_ENA__SDC2_H_CLK_ENA___M;
-		htcleo_sdcc.adm_crci_num        = 	ADM_CRCI_SDC2;
-
-		htcleo_mmc->priv      	= 	&htcleo_sdcc;
-		htcleo_mmc->voltages  	= 	SDCC_VOLTAGE_SUPPORTED;
-		htcleo_mmc->f_min     	= 	MCLK_400KHz;
-		htcleo_mmc->f_max     	= 	MCLK_48MHz;
-		htcleo_mmc->host_caps 	= 	MMC_MODE_4BIT |
-									MMC_MODE_HS |
-									MMC_MODE_HS_52MHz;
-		htcleo_mmc->read_bl_len	= 	512;
-		htcleo_mmc->write_bl_len	= 	512;
-		htcleo_mmc->send_cmd  	= 	sdcc_send_cmd;
-		htcleo_mmc->set_ios   	= 	sdcc_set_ios;
-		htcleo_mmc->init      	= 	sdcc_init;
-
-		//mmc_register(&htcleo_mmc);
-		//mmc_init(&htcleo_mmc);
-	/* end of ugly stuff */
-
 		/* Trying Slot 1 first */
 		DEBUG((EFI_D_ERROR, "MMCHSInitialize eMMC slot 1 init START!\n"));
 
-		if (sdcc_init(htcleo_mmc))
+		if (mmc_legacy_init())
 		{
 
 			DEBUG((EFI_D_ERROR, "MMCHSInitialize eMMC slot 1 init failed!\n"));
@@ -312,20 +277,11 @@ MMCHSInitialize(
 			//ret = mmc_read(blocksize, (UINT32 *)data, blocksize);
 			//ret = sdcc_read_data(mmc, cmd, data);//returns -8
 
-			DEBUG((EFI_D_ERROR, "First try to init SD after initing the controller\n"));
-			if(mmc_init()) {
-					DEBUG((EFI_D_ERROR, "SD init unsuccesfull, wait forever\n"));
-					for(;;){};
-			}
-
-			sdcc_check_status(mmc);
-
-			DEBUG((EFI_D_ERROR, "Test function end, wait forever\n"));
-			for(;;);
+			
 
 			DEBUG((EFI_D_ERROR, "SdccDxe: Test block read\n"));
 
-			ret = mmc_read_blocks(mmc, &Data, 512, 1);//struct mmc *mmc, void *dst, int start, int blkcnt
+			/*ret = mmc_read_blocks(mmc, &Data, 512, 1);//struct mmc *mmc, void *dst, int start, int blkcnt
 			
 			if (ret != MMC_BOOT_E_SUCCESS)
 			{
@@ -340,15 +296,11 @@ MMCHSInitialize(
 			UINT8 * STR = (UINT8 *)Data;
 
 			DEBUG((EFI_D_ERROR, "First 8 Bytes = %c%c%c%c%c%c%c%c\n", STR[0], STR[1], STR[2], STR[3], STR[4], STR[5], STR[6], STR[7]));
-			MicroSecondDelay(2000000);
-
-			DEBUG((EFI_D_ERROR, "FreePool()\n"));
-			MicroSecondDelay(2000000);
+			MicroSecondDelay(2000000);*/
 
 			Status = gBS->FreePool(Data);
 
 			DEBUG((EFI_D_ERROR, "We should be good to go\n"));
-			MicroSecondDelay(2000000);
 		}
 
 

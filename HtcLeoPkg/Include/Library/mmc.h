@@ -62,39 +62,9 @@
 #ifndef __MMC_H
 #define __MMC_H
 
-//#include "lk_types.h"
-/*----- from list.h ---- */
-struct list_node {
-	struct list_node *prev;
-	struct list_node *next;
-};/*----- from list.h ---- */
-
-
-/*----- from part.h ---- */
-typedef struct block_dev_desc {
-	int				if_type;		/* type of the interface */
-	int				dev;			/* device number */
-	unsigned char	part_type;		/* partition type */
-	unsigned char	target;			/* target SCSI ID */
-	unsigned char	lun;			/* target LUN */
-	unsigned char	type;			/* device type */
-	unsigned char	removable;		/* removable device */
-#ifdef CONFIG_LBA48
-	unsigned char	lba48;			/* device can use 48bit addr (ATA/ATAPI v7) */
-#endif
-	unsigned long	lba;			/* number of blocks */
-	unsigned long	blksz;			/* block size */
-	char			vendor [40+1];	/* IDE model, SCSI Vendor */
-	char			product[20+1];	/* IDE Serial no, SCSI product */
-	char			revision[8+1];	/* firmware revision */
-	unsigned long	(*block_read)(int dev, unsigned long start, unsigned long blkcnt, void *buffer);
-	unsigned long	(*block_write)(int dev, unsigned long start, unsigned long blkcnt, const void *buffer);
-	unsigned long   (*block_erase)(int dev, unsigned long start, unsigned long blkcnt);
-	void			*priv;			/* driver private struct pointer */
-} block_dev_desc_t;
-/*----- from list.h ---- */
-
-extern char *malloc();//added
+//#include <list.h>
+#include "list.h"
+#include "part.h"
 
 // Choose the SD controller to use. SDC1, 2, 3, or 4.
 #define SDC_INSTANCE  2
@@ -103,8 +73,8 @@ extern char *malloc();//added
 #define CONFIG_DOS_PARTITION
 #define CONFIG_GENERIC_MMC_MULTI_BLOCK_READ
 
-//#define USE_PROC_COMM -> removed
-//#define USE_DM -> removed
+//#define USE_PROC_COMM
+//#define USE_DM
 #define USE_HIGH_SPEED_MODE
 #define USE_4_BIT_BUS_MODE
 
@@ -441,7 +411,7 @@ typedef struct mmc {
 	uint tran_speed;
 	uint read_bl_len;
 	uint write_bl_len;
-	UINT64 capacity;
+	uint64_t capacity;
 	block_dev_desc_t block_dev;
 	int (*send_cmd)(struct mmc *mmc, mmc_cmd_t *cmd, mmc_data_t *data);
 	void (*set_ios)(struct mmc *mmc);
@@ -449,52 +419,34 @@ typedef struct mmc {
 }mmc_t;
 
 typedef struct sd_parms {
-   UINT32 instance;                  // which instance of the SD controller
-   UINT32 base;                      // SD controller base address
-   UINT32 ns_addr;                   // Clock controller NS reg address
-   UINT32 md_addr;                   // Clock controller MD reg address
-   UINT32 ns_initial;                // Clock controller NS reg initial value
-   UINT32 md_initial;                // Clock controller MD reg initial value
-   UINT32 row_reset_mask;            // Bit in the ROW reset register
-   UINT32 glbl_clk_ena_mask;         // Bit in the global clock enable
-   UINT32 glbl_clk_ena_initial;      // Initial value of the global clock enable bit                                
-   UINT32 adm_crci_num;              // ADM CRCI number
-   UINT32 adm_ch8_rslt_conf_initial; // Initial value of HI0_CH8_RSLT_CONF_SD3                                  
+   uint32_t instance;                  // which instance of the SD controller
+   uint32_t base;                      // SD controller base address
+   uint32_t ns_addr;                   // Clock controller NS reg address
+   uint32_t md_addr;                   // Clock controller MD reg address
+   uint32_t ns_initial;                // Clock controller NS reg initial value
+   uint32_t md_initial;                // Clock controller MD reg initial value
+   uint32_t row_reset_mask;            // Bit in the ROW reset register
+   uint32_t glbl_clk_ena_mask;         // Bit in the global clock enable
+   uint32_t glbl_clk_ena_initial;      // Initial value of the global clock enable bit                                
+   uint32_t adm_crci_num;              // ADM CRCI number
+   uint32_t adm_ch8_rslt_conf_initial; // Initial value of HI0_CH8_RSLT_CONF_SD3                                  
 }sd_parms_t;
 
+mmc_t htcleo_mmc;
+sd_parms_t htcleo_sdcc;
 
+int  mmc_ready; // Will be set to 1 if sdcard is ready
 
 int  sdcc_init(mmc_t *mmc);
 void sdcc_set_ios(mmc_t *mmc);
 int  sdcc_send_cmd(mmc_t *mmc, mmc_cmd_t *cmd, mmc_data_t *data);
 
-//int   mmc_init(mmc_t *mmc);
+int   mmc_init(mmc_t *mmc);
 int   mmc_register(mmc_t *mmc);
 ulong mmc_bread(int dev_num, ulong blknr, ulong blkcnt, void *dst);
 
-void SDCn_deinit(UINT32 instance);
-int  mmc_legacy_init(int verbose);
+void SDCn_deinit(uint32_t instance);
+int  mmc_legacy_init();
 void sdcard_gpio_config(int instance);
 
 #endif /* __MMC_H */
-
-
-
-
-EFI_STATUS
-EFIAPI
-SdccLibInitialize(
-	VOID
-);
-
-int sdcc_read_data(mmc_t *mmc, mmc_cmd_t *cmd, mmc_data_t *data);
-int mmc_read_blocks(struct mmc *mmc, void *dst, int start, int blkcnt);
-
-
-int sdcc_check_status(mmc_t *mmc);
-static int mmc_send_cmd(uint16_t cmd, uint32_t arg, uint32_t response[]);
-int card_identification_selection(uint32_t cid[], uint16_t* rca, uint8_t* num_of_io_func);
-int mmc_init();
-
-/* New SD card driver definitions */
-uint32_t sd_init()

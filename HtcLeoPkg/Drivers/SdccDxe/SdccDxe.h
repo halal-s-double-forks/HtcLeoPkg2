@@ -35,11 +35,11 @@
 #include <Library/adm.h>
 
 #include <Library/LKEnvLib.h>
-#include <Library/SdccLib.h>
 
 
-extern struct mmc_host mmc_host;
-extern struct mmc_card mmc_card;
+
+//extern struct mmc_host mmc_host;
+//extern struct mmc_card mmc_card;
 
 #define MAX_RETRY_COUNT  (100*5)
 

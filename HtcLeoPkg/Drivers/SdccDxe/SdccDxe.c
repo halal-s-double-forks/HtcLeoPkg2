@@ -125,12 +125,25 @@ MMCHSReadBlocks(
 
 	OldTpl = gBS->RaiseTPL(TPL_NOTIFY);
 
+    ulong BlockNumber = Lba;
+    unsigned long BlockCount = BufferSize / 512;//blocksize = 512
+    //void *dts = Buffer;
 
+	//DEBUG((EFI_D_ERROR, "MMCHSReadBlocks: Buffer before read =  %d\n", &Buffer[0]));
+
+    DEBUG((EFI_D_ERROR, "MMCHSReadBlocks: BufferSize =  %d\n", BufferSize));
+    DEBUG((EFI_D_ERROR, "MMCHSReadBlocks: Lba =  %d\n", Lba));
+	DEBUG((EFI_D_ERROR, "MMCHSReadBlocks: BlockCount =  %d\n", BlockCount));
+    mdelay(1000);
+
+    ret = mmc_bread(BlockNumber, BlockCount, Buffer);//ulong blknr, unsigned long blkcnt, void *dst
 	
-	/*if(ret != MMC_BOOT_E_SUCCESS)
+	if(ret != 0)
 	{
+        DEBUG((EFI_D_ERROR, "ReadBlocks failed!!!!\n"));
+        udelay(2000);
 		Status = EFI_DEVICE_ERROR;
-	}*/
+	}
 
 	gBS->RestoreTPL(OldTpl);
 	

@@ -85,6 +85,103 @@ MMCHSReset(
 	return EFI_SUCCESS;
 }
 
+/*
+ * Function: MmcReadInternal
+ * Arg     : Data address on card, o/p buffer & data length
+ * Return  : 0 on Success, non zero on failure
+ * Flow    : Read data from the card to out
+ */
+STATIC UINT32 MmcReadInternal
+(
+    //BIO_INSTANCE *Instance, 
+    UINT32 DataAddr, 
+    UINT32 *Buf, 
+    UINT32 DataLen
+)
+{
+    UINT32 Ret = 0;
+    UINT32 BlockSize = gMMCHSMedia.BlockSize;//Instance->BlockMedia.BlockSize;
+    /* Operation block size. Will decrement until reaches 1 */
+    UINT32 OpBlkSize = 64;
+    UINT32 ReadSize;
+    UINT8 *Sptr = (UINT8 *) Buf;
+
+    ASSERT(!(DataAddr % BlockSize));
+    ASSERT(!(DataLen % BlockSize));
+
+    /*
+    * DMA onto write back memory is unsafe/nonportable,
+    * but callers to this routine normally provide
+    * write back buffers. Invalidate cache
+    * before read data from MMC.
+    */
+    WriteBackInvalidateDataCacheRange(Buf, DataLen);
+
+    /* TODO: This function is aware of max data that can be
+    * tranferred using sdhci adma mode, need to have a cleaner
+    * implementation to keep this function independent of sdhci
+    * limitations
+    */
+
+    /* Set size */
+    ReadSize = BlockSize * OpBlkSize;//512*64
+
+	DEBUG((EFI_D_ERROR, "ReadSize / BlockSize=%d\n", (ReadSize/BlockSize)));
+
+read:
+    while (DataLen > ReadSize) 
+    {
+        Ret = mmc_bread((DataAddr / BlockSize), (ReadSize / BlockSize), (VOID *) Sptr);
+        if (Ret == 0)
+        {
+            // Attempt to reduce the block size
+            if (OpBlkSize > 1)
+            {
+                // Decrement op size
+                OpBlkSize = OpBlkSize / 2;
+                ReadSize = BlockSize * OpBlkSize;
+                goto read;
+            }
+            else
+            {
+                DEBUG((EFI_D_ERROR, "Failed Reading block @ %x\n",(UINTN) (DataAddr / BlockSize)));
+                goto fail;
+            }
+        }
+        Sptr += ReadSize;
+        DataAddr += ReadSize;
+        DataLen -= ReadSize;
+    }
+
+    if (DataLen)
+    {
+        Ret = mmc_bread((DataAddr / BlockSize), (DataLen / BlockSize), (VOID *) Sptr);
+        if (Ret == 0)
+        {
+            // Attempt to reduce the block size
+			DEBUG((EFI_D_ERROR, "Attempt to reduce the block size\n"));
+            if (OpBlkSize > 1)
+            {
+                // Decrement op size
+                OpBlkSize = OpBlkSize / 2;
+                ReadSize = BlockSize * OpBlkSize;
+                goto read;
+            }
+            else
+            {
+                DEBUG((EFI_D_ERROR, "Failed Reading block @ %x\n",(UINTN) (DataAddr / BlockSize)));
+                goto fail;
+            }
+        }
+    }
+
+    return 1;
+fail:
+	DEBUG((EFI_D_ERROR, "MmcReadInternal: Fail!!\n"));
+	mdelay(5000);
+    return 0;
+}
+
 
 /**
 
@@ -121,29 +218,48 @@ MMCHSReadBlocks(
 {
 	EFI_STATUS Status = EFI_SUCCESS;
 	EFI_TPL    OldTpl;
-	INT32      ret;
+	UINTN      BlockSize;
+	UINTN      ret;
+
+    BlockSize = gMMCHSMedia.BlockSize;
+
+    /*DEBUG((EFI_D_ERROR, "MMCHSReadBlocks: BufferSize =  0x%08lx\n", BufferSize));//%d
+	DEBUG((EFI_D_ERROR, "MMCHSReadBlocks: BlockSize =  %d\n", BlockSize));//%d
+    DEBUG((EFI_D_ERROR, "MMCHSReadBlocks: Lba =  %d\n", (UINT32) Lba));
+	DEBUG((EFI_D_ERROR, "MMCHSReadBlocks: BlockCount =  0x%08lx\n", BufferSize / BlockSize));
+    mdelay(3000);*/
+
+	if (BufferSize % BlockSize != 0) 
+    {
+		DEBUG((EFI_D_ERROR, "MMCHSReadBlocks: BAD buffer!!!\n"));
+    	mdelay(5000);
+        return EFI_BAD_BUFFER_SIZE;
+    }
+
+	if (Buffer == NULL) 
+    {
+		DEBUG((EFI_D_ERROR, "MMCHSReadBlocks: Invalid parameter!!!\n"));
+    	mdelay(5000);
+        return EFI_INVALID_PARAMETER;
+    }
+
+	if (BufferSize == 0) 
+    {
+		DEBUG((EFI_D_ERROR, "MMCHSReadBlocks: BufferSize = 0\n"));
+    	mdelay(5000);
+        return EFI_SUCCESS;
+    }
 
 	OldTpl = gBS->RaiseTPL(TPL_NOTIFY);
 
-    ulong BlockNumber = Lba;
-    unsigned long BlockCount = BufferSize / 512;//blocksize = 512
-    //void *dts = Buffer;
-
-	//DEBUG((EFI_D_ERROR, "MMCHSReadBlocks: Buffer before read =  %d\n", &Buffer[0]));
-
-    DEBUG((EFI_D_ERROR, "MMCHSReadBlocks: BufferSize =  %d\n", BufferSize));
-    DEBUG((EFI_D_ERROR, "MMCHSReadBlocks: Lba =  %d\n", Lba));
-	DEBUG((EFI_D_ERROR, "MMCHSReadBlocks: BlockCount =  %d\n", BlockCount));
-    mdelay(1000);
-
-    ret = mmc_bread(BlockNumber, BlockCount, Buffer);//ulong blknr, unsigned long blkcnt, void *dst
+	ret = MmcReadInternal((UINT64) Lba * 512, Buffer, BufferSize); //Instance deleted for now
 	
-	if(ret != 0)
-	{
-        DEBUG((EFI_D_ERROR, "ReadBlocks failed!!!!\n"));
-        udelay(2000);
-		Status = EFI_DEVICE_ERROR;
-	}
+	if (ret == 1)
+        return EFI_SUCCESS;
+    else
+        DEBUG((EFI_D_ERROR, "MMCHSReadBlocks: Read error!\n"));
+        mdelay(5000);
+        return EFI_DEVICE_ERROR;
 
 	gBS->RestoreTPL(OldTpl);
 	
@@ -185,16 +301,7 @@ MMCHSWriteBlocks(
 	EFI_TPL    OldTpl;
 	INT32      ret;
 
-	OldTpl = gBS->RaiseTPL(TPL_NOTIFY);
-
-	/*ret = mmc_write(gMMCHSMedia.BlockSize * Lba, BufferSize, (UINT32 *)Buffer);
-	
-	if(ret != MMC_BOOT_E_SUCCESS)
-	{
-		Status = EFI_DEVICE_ERROR;
-	}*/
-
-	gBS->RestoreTPL(OldTpl);
+	/* TBD */
 	
 	return Status;
 
@@ -237,8 +344,8 @@ static unsigned mmc_sdc_base[] =
 	MSM_SDC4_BASE 
 };
 
-extern struct mmc_host mmc_host;
-extern struct mmc_card mmc_card;
+//extern struct mmc_host mmc_host;
+//extern struct mmc_card mmc_card;
 
 EFI_STATUS
 EFIAPI
@@ -248,19 +355,14 @@ MMCHSInitialize(
 )
 {
 	EFI_STATUS  Status;
-//!gpio_get(153)
-	if (1) {
-        //HTCLEO_GPIO_SD_STATUS = 153
+
+	if (!gpio_get(HTCLEO_GPIO_SD_STATUS)) {
         DEBUG((EFI_D_ERROR, "SD card inserted\n"));
 
 		/* Trying Slot 1 first */
-		DEBUG((EFI_D_ERROR, "MMCHSInitialize eMMC slot 1 init START!\n"));
-
 		if (mmc_legacy_init())
 		{
-
 			DEBUG((EFI_D_ERROR, "MMCHSInitialize eMMC slot 1 init failed!\n"));
-
 		}
 		else
 		{
@@ -268,58 +370,36 @@ MMCHSInitialize(
 		}
 		
 		//gMMCHSMedia.LastBlock = (UINT64)((mmc_card.capacity / 512) - 1);
-		//DEBUG((EFI_D_ERROR, "Sdcc init DONE!\n"));
 
+		UINT32 blocksize = 512; //mmc_get_device_blocksize();
+
+		DEBUG((EFI_D_ERROR, "SD Block Size:%d\n", blocksize));
+
+        UINT8 BlkDump[512];
+		ZeroMem(BlkDump, 512);
+		BOOLEAN FoundMbr = FALSE;
+		for (UINTN i = 0; i <= MIN(512, 50); i++) //MIN(mBlkDesc.lba, 50)
 		{
-			UINT32 blocksize;
-			blocksize = 512;//mmc_get_device_blocksize();
-
-			DEBUG((EFI_D_ERROR, "eMMC Block Size:%d\n", blocksize));
-
-			VOID * Data;
-			//mmc_data_t *data;
-
-			Status = gBS->AllocatePool(EfiBootServicesData, (blocksize), &Data);
-
-			if (EFI_ERROR(Status)) {
-				DEBUG((EFI_D_ERROR, "test memory alloc failed!\n"));
-				return Status;
-			}
-
-			int ret = 0;
-			//ret = mmc_read(blocksize, (UINT32 *)data, blocksize);
-			//ret = sdcc_read_data(mmc, cmd, data);//returns -8
-
-			
-
-			DEBUG((EFI_D_ERROR, "SdccDxe: Test block read\n"));
-
-			/*ret = mmc_read_blocks(mmc, &Data, 512, 1);//struct mmc *mmc, void *dst, int start, int blkcnt
-			
-			if (ret != MMC_BOOT_E_SUCCESS)
-			{
-				DEBUG((EFI_D_ERROR, "mmc_read failed! ret = %d\n", ret));
-				MicroSecondDelay(2000000);
-				return EFI_DEVICE_ERROR;
-			}
-
-			DEBUG((EFI_D_ERROR, "mmc_read succeeded! ret = %d\n", ret));
-			MicroSecondDelay(2000000);
-
-			UINT8 * STR = (UINT8 *)Data;
-
-			DEBUG((EFI_D_ERROR, "First 8 Bytes = %c%c%c%c%c%c%c%c\n", STR[0], STR[1], STR[2], STR[3], STR[4], STR[5], STR[6], STR[7]));
-			MicroSecondDelay(2000000);*/
-
-			Status = gBS->FreePool(Data);
-
-			DEBUG((EFI_D_ERROR, "We should be good to go\n"));
-		}
-
+            int blk = mmc_bread(i, 1, &BlkDump);
+            if (blk)
+            {
+                if (BlkDump[510] == 0x55 && BlkDump[511] == 0xAA)
+                {
+                    DEBUG((EFI_D_INFO, "MBR found at %d \n", i));
+                    FoundMbr = TRUE;
+                    break;
+                }
+                DEBUG((EFI_D_INFO, "MBR not found at %d \n", i));
+                return EFI_DEVICE_ERROR; //Hack?
+            }
+		}    
+        if (!FoundMbr)
+        {
+            DEBUG((EFI_D_ERROR, "(Protective) MBR not found \n"));
+            CpuDeadLoop();
+        }
 
 		//Publish BlockIO.
-		DEBUG((EFI_D_ERROR, "Publish the BlockIO protocol\n"));
-		MicroSecondDelay(2000000);
 		Status = gBS->InstallMultipleProtocolInterfaces(
 			&ImageHandle,
 			&gEfiBlockIoProtocolGuid, &gBlockIo,

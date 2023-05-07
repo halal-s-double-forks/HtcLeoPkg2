@@ -619,8 +619,6 @@ struct mmc_host {
 #define CORE_SW_RST_WIDTH                          0x1
 
 unsigned int mmc_boot_main(unsigned char slot, unsigned int base);
-unsigned int mmc_write(unsigned long long data_addr,unsigned int data_len, unsigned int *in);
-unsigned int mmc_read(unsigned long long data_addr, unsigned int *out,unsigned int data_len);
 unsigned mmc_get_psn(void);
 unsigned int mmc_erase_card(unsigned long long data_addr,unsigned long long data_len);
 UINT32 mmc_get_device_blocksize(VOID);

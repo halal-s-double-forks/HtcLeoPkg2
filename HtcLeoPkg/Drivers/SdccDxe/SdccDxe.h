@@ -43,6 +43,8 @@
 
 #define MAX_RETRY_COUNT  (100*5)
 
+#define HTCLEO_GPIO_SD_STATUS 153
+
 #define HCS               BIT30 //Host capacity support/1 = Supporting high capacity
 #define CCS               BIT30 //Card capacity status/1 = High capacity card
 typedef struct

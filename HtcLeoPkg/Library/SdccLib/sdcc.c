@@ -44,22 +44,10 @@
 
 #include <Library/LKEnvLib.h>
 #include <Library/mmc.h>
-/*#include <Library/list.h>
-#include <Library/part.h>
-#include <Library/mmc.h>*/
-
-//#include <Library/SdccLib.h>
 
 int  mmc_is_ready; // Will be set to 1 if sdcard is ready
 
-/*#include <adm.h>
-#include <compiler.h>
-#include <mmc.h>
-#include <reg.h>
-#include <debug.h>
-#include <platform/timer.h>
-#include <target/reg.h>
-
+/*
 #ifdef USE_PROC_COMM
 #include <pcom_clients.h>
 #endif */
@@ -106,70 +94,35 @@ block_dev_desc_t *mmc_get_dev(int dev)
 	return ((block_dev_desc_t *) &mmc_dev);
 }
 
-int mmc_write(uchar * src, ulong dst, int size)
-{
-    // ZZZZ not implemented yet.  Called by do_mem_cp().
-    return 0;
-}
-
-int mmc_read(ulong src, uchar *dst, int size)
-{
-    // ZZZZ not implemented yet.  Called by do_mem_cp().
-    return 0;
-}
-
 ulong mmc_bwrite(int dev_num, ulong blknr, unsigned long blkcnt, const void *src)
 {
 	return 0;
 }
 
-ulong mmc_bread(int dev_num, ulong blknr, unsigned long blkcnt, void *dst)
+ulong mmc_bread(UINT32 start, UINT32 blkcnt, void *dst)
 {
-    int i;
-    unsigned long run_blkcnt = 0;
+	int err;
+	UINT32 cur, blocks_todo = blkcnt;
+	uint32_t buffer[128];
 
-    //printf("bread blknr=0x%08lx blkcnt=0x%08lx dst=0x%08lx\n", blknr, blkcnt, dst);
+	/*
+	 * Might be needed to set blocklen here
+	}*/
 
-    if (blkcnt == 0) {
-        return 0;
-    }
+	do {
+		cur = 1;
+		if (!read_a_block(start, dst))
+		{
+			DEBUG((EFI_D_ERROR, "%s: Failed to read blocks\n", __func__));
+			return 0;
+		}
+		blocks_todo -= cur;
+		start += cur;
+		dst += cur * SDCC_FIFO_SIZE;//mmc->read_bl_len;
+	} 
+	while (blocks_todo > 0);
 
-    /* Break up reads into multiples of NUM_BLOCKS_MULT */
-    while (blkcnt != 0) {
-        if (blkcnt >= NUM_BLOCKS_MULT)
-           i = NUM_BLOCKS_MULT;
-        else
-           i = blkcnt;
-
-        if (i==1) {
-            // Single block read
-            if(!read_a_block(blknr, dst)) {
-               DEBUG((EFI_D_ERROR, "SD - read_a_block_dm error, blknr= 0x%08lx\n", blknr));
-               return run_blkcnt;
-            }
-        } else {
-            // Multiple block read using data mover
-            if(!read_a_block_dm(blknr, i, dst)) {
-               DEBUG((EFI_D_ERROR, "SD - read_a_block_dm error, blknr= 0x%08lx\n", blknr));
-               return run_blkcnt;
-            }
-        }
-
-        run_blkcnt += i;
-        // Output status every NUM_BLOCKS_STATUS blocks
-        if ((run_blkcnt % NUM_BLOCKS_STATUS) == 0)
-           DEBUG((EFI_D_ERROR, "."));
-
-        blknr += i;
-        blkcnt -= i;
-        dst += (BLOCK_SIZE * i);
-    }
-
-    if (run_blkcnt >= NUM_BLOCKS_STATUS) {
-        DEBUG((EFI_D_ERROR, "\n"));
-    }
-
-	return run_blkcnt;
+	return blkcnt;
 }
 
 int mmc_legacy_init()
@@ -192,7 +145,6 @@ int mmc_legacy_init()
 		DEBUG((EFI_D_ERROR,"SD - error ADM structures not 8 byte aligned\n"));
 		return rc;
     }
-	DEBUG((EFI_D_ERROR, "ADM structures 8 byte aligned\n"));
 
     // SD Init
     if (!SDCn_init(SDC_INSTANCE)) {
@@ -208,7 +160,6 @@ int mmc_legacy_init()
        
 		return rc;
     }
-	DEBUG((EFI_D_ERROR,"ID done\n"));
 
     // Change SD clock configuration, set PWRSAVE and FLOW_ENA
     writel(readl(sdcn.base + MCI_CLK) |	MCI_CLK__PWRSAVE___M | MCI_CLK__FLOW_ENA___M,
@@ -219,7 +170,6 @@ int mmc_legacy_init()
 		
 		return rc;
     }
-	DEBUG((EFI_D_ERROR,"transfer init done\n"));
 
 #ifdef USE_4_BIT_BUS_MODE
     // Card is now in four bit mode, do the same with the clock
@@ -233,7 +183,6 @@ int mmc_legacy_init()
 		
 		return rc;
     }
-	DEBUG((EFI_D_ERROR,"SD status done\n"));
 	
     // The card is now in data transfer mode, standby state.
 
@@ -258,15 +207,10 @@ int mmc_legacy_init()
         
 		return rc;
     }
-	DEBUG((EFI_D_ERROR,"blocksize set\n"));
 
 	DEBUG((EFI_D_ERROR,"Read the first block of the SD card as a sanity check.\n"));
 
-#ifdef USE_DM // Read the first block of the SD card as a sanity check.
-    if(!read_a_block_dm(0, 1, &buffer[0]))
-#else
-    if(!read_a_block(0, &buffer[0]))
-#endif
+	if(!read_a_block(0, &buffer[0]))
     {
 		DEBUG((EFI_D_ERROR,"SD - error first block\n\r"));
        
@@ -282,21 +226,7 @@ int mmc_legacy_init()
     mmc_ready = 1;
 	
     rc = 0;
-
-    mdelay(10000);
-
 	return rc;
-}
-
-int mmc_ident(block_dev_desc_t * dev)
-{
-	return 0;
-}
-
-int mmc2info(ulong addr)
-{
-    // ZZZZ not implemented yet.  Called by do_mem_cp().
-	return 0;
 }
 
 #define UNSTUFF_BITS(resp,start,size)					\
@@ -430,7 +360,7 @@ static void mmc_decode_csd(uint32_t * resp)
 	mmc_dev.lun 		= 0;
 	mmc_dev.type 		= DEV_TYPE_HARDDISK;
 	mmc_dev.removable 	= 0;
-	mmc_dev.block_read 	= mmc_bread;
+	//mmc_dev.block_read 	= mmc_bread;
 	mmc_dev.block_write = mmc_bwrite;
 
 	DEBUG((EFI_D_ERROR, "Detected: %lu blocks of %lu bytes (%luMB) ",
@@ -1308,7 +1238,7 @@ static int SDCn_init(uint32_t instance)
 	//printf("sdcn.glbl_clk_ena_initial = %d\n", sdcn.glbl_clk_ena_initial);
 	pcom_enable_sdcard_pclk(sdcn.instance);
 	//printf("AFTER_ENABLE:: sdc_clk_enable=%d\n",
-    pcom_is_sdcard_pclk_enabled(sdcn.instance));
+    pcom_is_sdcard_pclk_enabled(sdcn.instance);
 #endif /*USE_PROC_COMM*/
 
 	// Set SD MCLK to 400KHz for card detection

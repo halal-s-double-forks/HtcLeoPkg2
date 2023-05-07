@@ -74,7 +74,7 @@
 #define CONFIG_GENERIC_MMC_MULTI_BLOCK_READ
 
 //#define USE_PROC_COMM
-//#define USE_DM
+#define USE_DM
 #define USE_HIGH_SPEED_MODE
 #define USE_4_BIT_BUS_MODE
 
@@ -443,7 +443,7 @@ int  sdcc_send_cmd(mmc_t *mmc, mmc_cmd_t *cmd, mmc_data_t *data);
 
 int   mmc_init(mmc_t *mmc);
 int   mmc_register(mmc_t *mmc);
-ulong mmc_bread(ulong blknr, ulong blkcnt, void *dst);
+ulong mmc_bread(UINT32 start, UINT32 blkcnt, void *dst);
 
 void SDCn_deinit(uint32_t instance);
 int  mmc_legacy_init();

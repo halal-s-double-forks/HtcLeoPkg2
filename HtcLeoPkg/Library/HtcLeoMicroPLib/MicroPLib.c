@@ -69,14 +69,11 @@ MicroPInitialize(VOID)
   EFI_STATUS         Status = EFI_SUCCESS;
   DEBUG((EFI_D_ERROR, "Init MicroPLib \n"));
 	microp_i2c_probe(&microp_pdata);
-	//DEBUG((EFI_D_ERROR, "WRITING TO I2C IN 5 SECONDS \n"));
-	//mdelay(5000);
-//writel(0x1CC, 0xA9900000);
   DEBUG((EFI_D_ERROR, "ABOUT TO TURN LED GREEN \n"));
   mdelay(3000);
   htcleo_led_set_mode(1);
   DEBUG((EFI_D_ERROR, "LED NOW SHOULD BE GREEN \n"));
-  mdelay(20000);
+  mdelay(2000);
 
 
   return Status;

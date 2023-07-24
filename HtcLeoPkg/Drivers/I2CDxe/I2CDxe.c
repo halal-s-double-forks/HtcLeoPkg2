@@ -42,14 +42,17 @@ I2CDxeInitialize(
 )
 {
 	EFI_STATUS  Status = EFI_SUCCESS;
+  EFI_TPL               OldTpl;
+
 
 	DEBUG((EFI_D_ERROR, "I2CDxe init start \n"));
-
+  OldTpl = gBS->RaiseTPL(TPL_HIGH_LEVEL);
 	 Status = MsmI2cInitialize();
    ASSERT_EFI_ERROR(Status);
 
    Status = MicroPInitialize();
    ASSERT_EFI_ERROR(Status);
+   gBS->RestoreTPL(OldTpl);
 
 	DEBUG((EFI_D_ERROR, "I2CDxe init done! \n"));
   

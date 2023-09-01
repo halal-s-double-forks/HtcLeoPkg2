@@ -23,7 +23,6 @@
   MsmTargetGpioLib
   MsmPcomLib
   InterruptsLib
-  MsmTargetClockLib
 
 [Packages]
   ArmPkg/ArmPkg.dec

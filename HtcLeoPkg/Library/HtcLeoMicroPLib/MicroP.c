@@ -31,8 +31,8 @@ int microp_i2c_read(uint8_t addr, uint8_t *data, int length)
 			break;
 			}
 			DEBUG((EFI_D_ERROR, "MSM_I2C_XFER FINISHED YAY !!!!!! \n"));
-			mdelay(5000);
-		mdelay(5);
+			MicroSecondDelay(5000);
+		MicroSecondDelay(5);
 	}
 	if (retry > MSM_I2C_WRITE_RETRY_TIMES)
 		return -1;
@@ -63,24 +63,24 @@ int microp_i2c_write(uint8_t addr, uint8_t *cmd, int length)
 	memcpy((void *)&cmd_buffer[1], (void *)cmd, length);
 	DEBUG((EFI_D_ERROR, "MICROP_I2C_WRITE: CopyMem now \n"));
 	//CopyMem((VOID *)&cmd_buffer[1], (VOID *)cmd, (UINTN)length);
-	mdelay(1000);
+	MicroSecondDelay(1000);
 	
 	int retry;
 	for (retry = 0; retry <= MSM_I2C_WRITE_RETRY_TIMES; retry++) {
 		if (msm_i2c_xfer(msg, 1) == 1){
 			DEBUG((EFI_D_ERROR, "MICROP_I2C_WRITE: xfer success ??? \n"));
-			mdelay(2000);
+			MicroSecondDelay(2000);
 			break;
 			}
-		mdelay(5);
+		MicroSecondDelay(5);
 	}
 	if (retry > MSM_I2C_WRITE_RETRY_TIMES){
 		DEBUG((EFI_D_ERROR, "MICROP_I2C_WRITE: xfer timeout \n"));
-		mdelay(2000);
+		MicroSecondDelay(2000);
 		return -1;
 	}
 	DEBUG((EFI_D_ERROR, "MICROP_I2C_WRITE: returning 0 \n"));
-	mdelay(1000);
+	MicroSecondDelay(1000);
 	return 0;
 }
 

@@ -70,10 +70,10 @@ MicroPInitialize(VOID)
   DEBUG((EFI_D_ERROR, "Init MicroPLib \n"));
 	microp_i2c_probe(&microp_pdata);
   DEBUG((EFI_D_ERROR, "ABOUT TO TURN LED GREEN \n"));
-  mdelay(3000);
+  MicroSecondDelay(3000);
   htcleo_led_set_mode(1);
   DEBUG((EFI_D_ERROR, "LED NOW SHOULD BE GREEN \n"));
-  mdelay(2000);
+  MicroSecondDelay(2000);
 
 
   return Status;

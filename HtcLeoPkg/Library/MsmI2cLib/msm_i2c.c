@@ -119,7 +119,7 @@ static void dump_status(uint32_t status)
 		}
 	//I2C_DBG(//DEBUGLEVEL, "\n");
 	//DEBUG((EFI_D_ERROR, "\n"));
-	//mdelay(2000);
+	//MicroSecondDelay(2000);
 }
 #endif
 
@@ -134,7 +134,7 @@ static void msm_i2c_write_delay(void)
 		return;
 	}
 		
-	udelay(6);
+	NanoSecondDelay(6);
 }
 
 static bool msm_i2c_fill_write_buffer(void)
@@ -156,11 +156,11 @@ static bool msm_i2c_fill_write_buffer(void)
 
 		DEBUG((EFI_D_ERROR, "CRITICAL: writel(val, dev.pdata->i2c_base + I2C_WRITE_DATA);\n"));
 		DEBUG((EFI_D_ERROR, "CRITICAL: writel(%x, %x + %x)\n", val, dev.pdata->i2c_base, I2C_WRITE_DATA));
-		mdelay(2000);
+		MicroSecondDelay(2000);
 		writel(val, dev.pdata->i2c_base + I2C_WRITE_DATA);
 		dev.pos++;
 		//DEBUG((EFI_D_ERROR, "writel(val, dev.pdata->i2c_base + I2C_WRITE_DATA); HAPPENED\n"));
-		//mdelay(10000);
+		//MicroSecondDelay(10000);
 		return true;
 	}else {
 		//DEBUG((EFI_D_ERROR, "IF IN LINE 138 WAS NOT TRUE\n"));
@@ -180,7 +180,7 @@ static bool msm_i2c_fill_write_buffer(void)
 		val |= I2C_WRITE_DATA_LAST_BYTE;
 	msm_i2c_write_delay();
 	//DEBUG((EFI_D_ERROR, "writel(%x, %x + %x)\n", val, dev.pdata->i2c_base, I2C_WRITE_DATA));
-	//mdelay(1000);
+	//MicroSecondDelay(1000);
 	writel(val, dev.pdata->i2c_base + I2C_WRITE_DATA);
 	dev.pos++;
 	dev.cnt--;
@@ -229,7 +229,7 @@ static void msm_i2c_read_buffer(void)
 static void msm_i2c_interrupt_locked(void)
 {
 	//DEBUG((EFI_D_ERROR, "MSM_I2C_INTERRUPT_LOCKED FUNCTION\n"));
-	//mdelay(2000);
+	//MicroSecondDelay(2000);
 	uint32_t status	= readl(dev.pdata->i2c_base + I2C_STATUS);
 	bool not_done = true;
 
@@ -244,16 +244,16 @@ static void msm_i2c_interrupt_locked(void)
 	
 	if (status & I2C_STATUS_ERROR_MASK){
 		//DEBUG((EFI_D_ERROR, "ERROR DETECTED ENTERING ERROR STATE\n"));
-		//mdelay(2000);
+		//MicroSecondDelay(2000);
 		goto out_err;
 		}
 
 	if (!(status & I2C_STATUS_WR_BUFFER_FULL)){
 	//DEBUG((EFI_D_ERROR, "FILL WRITE BUFFER ABOUT TO HAPPEN\n"));
-	//mdelay(5000);
+	//MicroSecondDelay(5000);
 		not_done = msm_i2c_fill_write_buffer();
 		//DEBUG((EFI_D_ERROR, "FILL WRITE BUFFER HAPPENED\n"));
-		//mdelay(5000);
+		//MicroSecondDelay(5000);
 		}
 	if (status & I2C_STATUS_RD_BUFFER_FULL){
 		//DEBUG((EFI_D_ERROR, "READ I2C BUFFER ABOUT TO HAPPEN\n"));
@@ -277,7 +277,7 @@ static void msm_i2c_interrupt_locked(void)
 		}
 	}
 	//DEBUG((EFI_D_ERROR, "INTERRUPT RETURNING NOW\n"));
-	//mdelay(2000);
+	//MicroSecondDelay(2000);
 	return;
 
 out_err:
@@ -302,7 +302,7 @@ static enum handler_return msm_i2c_isr(void *arg) {
 static int msm_i2c_poll_notbusy(int warn)
 {
 	//DEBUG((EFI_D_ERROR, "MSM_I2C_POLL_NOTBUSY FUNCTION \n"));
-	//mdelay(3000);
+	//MicroSecondDelay(3000);
 	uint32_t retries = 0;
 	while (retries != 200) {
 		uint32_t status = readl(dev.pdata->i2c_base + I2C_STATUS);
@@ -319,13 +319,13 @@ static int msm_i2c_poll_notbusy(int warn)
 		}
 		
 		if (retries++ > 100){
-			//mdelay(10);
+			//MicroSecondDelay(10);
 			}
 	}
 	
 	//I2C_ERR("Error waiting for notbusy\n");
 	//DEBUG((EFI_D_ERROR, "Error waiting for notbusy \n"));
-	//mdelay(2000);
+	//MicroSecondDelay(2000);
 	return ERR_TIMED_OUT;
 }
 
@@ -364,29 +364,29 @@ static int msm_i2c_recover_bus_busy(void)
 			break;
 			
 		gpio_set(dev.pdata->scl_gpio, 0);
-		udelay(5);
+		NanoSecondDelay(5);
 		
 		gpio_set(dev.pdata->sda_gpio, 0);
-		udelay(5);
+		NanoSecondDelay(5);
 		
 		gpio_config(dev.pdata->scl_gpio, GPIO_INPUT);
-		udelay(5);
+		NanoSecondDelay(5);
 		
 		if (!gpio_get(dev.pdata->scl_gpio))
-			udelay(20);
+			NanoSecondDelay(20);
 			
 		if (!gpio_get(dev.pdata->scl_gpio))
-			//mdelay(10);
+			//MicroSecondDelay(10);
 			
 		gpio_clk_status = gpio_get(dev.pdata->scl_gpio);
 		gpio_config(dev.pdata->sda_gpio, GPIO_INPUT);
-		udelay(5);
+		NanoSecondDelay(5);
 	}
 	
 	if (dev.pdata->set_mux_to_i2c)
 		dev.pdata->set_mux_to_i2c(1);
 
-	udelay(10);
+	NanoSecondDelay(10);
 
 	status = readl(dev.pdata->i2c_base + I2C_STATUS);
 	if (!(status & I2C_STATUS_BUS_ACTIVE)) {
@@ -400,12 +400,15 @@ static int msm_i2c_recover_bus_busy(void)
 	return ERR_NOT_READY;
 }
 
+extern UINTN ClkEnable(UINTN Id);
+extern VOID ClkDisable(UINTN Id);
+
 int msm_i2c_xfer(struct i2c_msg msgs[], int num)
 {
 	//DEBUG((EFI_D_ERROR, "MSM_I2C_XFER FUNCTION \n"));
 	int ret, ret_wait;
 	//DEBUG((EFI_D_ERROR, "ABOUT TO ENABLE SOME CLOCK \n"));
-	clk_enable(dev.pdata->clk_nr);
+	ClkEnable(dev.pdata->clk_nr);
 	//DEBUG((EFI_D_ERROR, "CLOCK ENABLED \n"));
 	//DEBUG((EFI_D_ERROR, "ABOUT TO UNMASK SOME INTERRUPT \n"));
 	unmask_interrupt(dev.pdata->irq_nr);
@@ -413,17 +416,17 @@ int msm_i2c_xfer(struct i2c_msg msgs[], int num)
 
 	ret = msm_i2c_poll_notbusy(1);
 	//DEBUG((EFI_D_ERROR, "MSM_I2C_POLL_NOTBUSY RETURNED %d\n", ret));
-	//mdelay(2000);
+	//MicroSecondDelay(2000);
 
 	if (ret) {
 		//DEBUG((EFI_D_ERROR, "ABOUT TO RECOVER BUS BUSY \n", ret));
-			//mdelay(2000);
+			//MicroSecondDelay(2000);
 		ret = msm_i2c_recover_bus_busy();
 		//DEBUG((EFI_D_ERROR, "BUS BUSY RECOVERD \n", ret));
-			//mdelay(2000);
+			//MicroSecondDelay(2000);
 		if (ret){
 			//DEBUG((EFI_D_ERROR, "RECOVER FAILED ENTERING ERROR STATE \n", ret));
-			//mdelay(20000);
+			//MicroSecondDelay(20000);
 			goto err;
 			}
 	}
@@ -445,11 +448,11 @@ int msm_i2c_xfer(struct i2c_msg msgs[], int num)
 	//DEBUG((EFI_D_ERROR, "ABOUT TO LOCK INTERRUPT\n"));
 	msm_i2c_interrupt_locked();
 	//DEBUG((EFI_D_ERROR, "INTERRUPT LOCKED\n"));
-	//mdelay(5000);
+	//MicroSecondDelay(5000);
 
 	//exit_critical_section();
 	//DEBUG((EFI_D_ERROR, "INTERRUPT LOCKED 2\n"));
-	//mdelay(5000);
+	//MicroSecondDelay(5000);
 	//EfiReleaseLock(&MySpinLock);
 
 	/*
@@ -458,7 +461,7 @@ int msm_i2c_xfer(struct i2c_msg msgs[], int num)
 	 */
 	ret_wait = msm_i2c_poll_notbusy(0); /* Read may not have stopped in time */
 	//DEBUG((EFI_D_ERROR, "RET VALUE IS HERE FROM NOTBUSY %d\n", ret_wait));
-	//mdelay(2000);
+	//MicroSecondDelay(2000);
 	
 	//enter_critical_section();
 	//OldTpl3 = gBS->RaiseTPL (TPL_HIGH_LEVEL);
@@ -466,7 +469,7 @@ int msm_i2c_xfer(struct i2c_msg msgs[], int num)
 	if (dev.flush_cnt) {
 		//I2C_DBG(//DEBUGLEVEL, "%d unrequested bytes read\n", dev.flush_cnt);
 		//DEBUG((EFI_D_ERROR, "%d unrequested bytes read\n", dev.flush_cnt));
-		//mdelay(2000);
+		//MicroSecondDelay(2000);
 	}
 	ret = dev.ret;
 	dev.msg = NULL;
@@ -482,11 +485,11 @@ int msm_i2c_xfer(struct i2c_msg msgs[], int num)
 	if (ret_wait != 0) {
 		//I2C_DBG(//DEBUGLEVEL, "Still busy after xfer completion\n");
 		//DEBUG((EFI_D_ERROR, "Still busy after xfer completion\n"));
-		//mdelay(2000);
+		//MicroSecondDelay(2000);
 		ret_wait = msm_i2c_recover_bus_busy();
 		if (ret_wait != 0){
 			//DEBUG((EFI_D_ERROR, "ERROR IN RECOVERING THE BUS\n"));
-			//mdelay(5000);
+			//MicroSecondDelay(5000);
 			goto err;
 		}
 			
@@ -494,13 +497,13 @@ int msm_i2c_xfer(struct i2c_msg msgs[], int num)
 	if (timeout == ERR_TIMED_OUT) {
 		//I2C_DBG(//DEBUGLEVEL, "Transaction timed out\n");
 		//DEBUG((EFI_D_ERROR, "Transaction timed out\n"));
-		//mdelay(2000);
+		//MicroSecondDelay(2000);
 		ret = ERR_TIMED_OUT;
 	}
 	if (ret < 0) {
 		I2C_ERR("Error during data xfer (%d)\n", ret);
 		//DEBUG((EFI_D_ERROR, "Error during data xfer (%d)\n", ret));
-		//mdelay(2000);
+		//MicroSecondDelay(2000);
 		msm_i2c_recover_bus_busy();
 	}
 	/* if (timeout == ERR_TIMED_OUT) {
@@ -518,9 +521,9 @@ int msm_i2c_xfer(struct i2c_msg msgs[], int num)
 	} */
 err:
 //DEBUG((EFI_D_ERROR, "ERROR STATE ENTERED I2C XFER"));
-//mdelay(20000);
+//MicroSecondDelay(20000);
 	mask_interrupt(dev.pdata->irq_nr);
-	clk_disable(dev.pdata->clk_nr);
+	ClkDisable(dev.pdata->clk_nr);
 	
 	return ret;
 }
@@ -532,7 +535,7 @@ int msm_i2c_write(int chip, void *buf, size_t count)
 	if (!dev.pdata) {
 		//I2C_DBG(ALWAYS, "[MSM-I2C]: %s: called when driver is not installed\n", __func__);
 		//DEBUG((EFI_D_ERROR, "[MSM-I2C]: %s: called when driver is not installed\n", __func__));
-		//mdelay(2000);
+		//MicroSecondDelay(2000);
 		return rc;
 	}
 
@@ -546,7 +549,7 @@ int msm_i2c_write(int chip, void *buf, size_t count)
 			rc = 0;
 			break;
 		}
-		//mdelay(10);
+		//MicroSecondDelay(10);
 		//I2C_DBG(//DEBUGLEVEL, "%s, i2c write retry\n", __func__);
 	}
 
@@ -559,7 +562,7 @@ int msm_i2c_read(int chip, uint8_t reg, void *buf, size_t count)
 	if (!dev.pdata) {
 		//I2C_DBG(ALWAYS, "[MSM-I2C]: %s: called when driver is not installed\n", __func__);
 		//DEBUG((EFI_D_ERROR, "[MSM-I2C]: %s: called when driver is not installed\n", __func__));
-		//mdelay(2000);
+		//MicroSecondDelay(2000);
 		return rc;
 	}
 
@@ -574,7 +577,7 @@ int msm_i2c_read(int chip, uint8_t reg, void *buf, size_t count)
 			rc = 0;
 			break;
 		}
-		//mdelay(10);
+		//MicroSecondDelay(10);
 		//I2C_DBG(//DEBUGLEVEL, "%s, i2c read retry\n", __func__);
 	}
 	
@@ -586,7 +589,7 @@ int msm_i2c_probe(struct msm_i2c_pdata* pdata)
 	if (dev.pdata) {
 		//I2C_DBG(ALWAYS, "[MSM-I2C]: already installed\n");
 		//DEBUG((EFI_D_ERROR, "[MSM-I2C]: already installed\n"));
-		//mdelay(2000);
+		//MicroSecondDelay(2000);
 		return -1;
 	}
 	if (!pdata->set_mux_to_i2c)
@@ -600,7 +603,7 @@ int msm_i2c_probe(struct msm_i2c_pdata* pdata)
 	//EfiAcquireLock(&MySpinLock);
 	mask_interrupt(dev.pdata->irq_nr);
 	dev.pdata->set_mux_to_i2c(0);
-	clk_enable(dev.pdata->clk_nr);
+	ClkEnable(dev.pdata->clk_nr);
 	
 	int i2c_clk 	= 19200000;
 	int target_clk 	= 100000;
@@ -614,13 +617,13 @@ int msm_i2c_probe(struct msm_i2c_pdata* pdata)
 	int hs_div = 3;
 	int clk_ctl = ((hs_div & 0x7) << 8) | (fs_div & 0xff);
 	//DEBUG((EFI_D_ERROR, "writel(%x, %x + %x)\n", clk_ctl, dev.pdata->i2c_base + I2C_CLK_CTL));
-	//mdelay(1000);
+	//MicroSecondDelay(1000);
 	writel(clk_ctl, dev.pdata->i2c_base + I2C_CLK_CTL);
 	//IoWrite16((UINTN)dev.pdata->i2c_base + I2C_CLK_CTL, (UINT16)clk_ctl)
 	//I2C_DBG(//DEBUGLEVEL, "msm_i2c_probe: clk_ctl %x, %d Hz\n", clk_ctl, i2c_clk / (2 * ((clk_ctl & 0xff) + 3)));
 	//DEBUG((EFI_D_ERROR, "msm_i2c_probe: clk_ctl %x, %d Hz\n", clk_ctl, i2c_clk / (2 * ((clk_ctl & 0xff) + 3))));
 
-	clk_disable(dev.pdata->clk_nr);
+	ClkDisable(dev.pdata->clk_nr);
 	register_int_handler(dev.pdata->irq_nr, msm_i2c_isr, NULL);
 	unmask_interrupt(dev.pdata->irq_nr);
 	//exit_critical_section();
@@ -638,7 +641,7 @@ void msm_i2c_remove() {
 	//OldTpl5 = gBS->RaiseTPL (TPL_HIGH_LEVEL);
 	//EfiAcquireLock(&MySpinLock);
 	mask_interrupt(dev.pdata->irq_nr);
-	clk_disable(dev.pdata->clk_nr);
+	ClkDisable(dev.pdata->clk_nr);
 	dev.pdata->set_mux_to_i2c(0);
 	dev.pdata = NULL;
 	//exit_critical_section();

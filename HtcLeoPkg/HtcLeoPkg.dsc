@@ -43,7 +43,7 @@
   OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrderedCollectionRedBlackTreeLib.inf
   ArmLib|ArmPkg/Library/ArmLib/ArmBaseLib.inf
   ArmPlatformLib|HtcLeoPkg/Library/HtcLeoPkgLib/HtcLeoPkgLib.inf
-  TimerLib|HtcLeoPkg/Library/TimerLib/TimerLib.inf
+  TimerLib|HtcLeoPkg/Library/GPTTimerLib/GPTTimerLib.inf
   CompilerIntrinsicsLib|ArmPkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
   CapsuleLib|MdeModulePkg/Library/DxeCapsuleLibNull/DxeCapsuleLibNull.inf
   PlatformBootManagerLib|HtcLeoPkg/Library/PlatformBootManagerLib/PlatformBootManagerLib.inf
@@ -81,7 +81,6 @@
   CompilerIntrinsicsLib|ArmPkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
 
   # Little kernel libraries
-  AdmLib|HtcLeoPkg/GPLLibrary/AdmLib/AdmLib.inf
   MsmPcomLib|HtcLeoPkg/Library/MsmPcomLib/MsmPcomLib.inf
   MsmPcomClientLib|HtcLeoPkg/Library/MsmPcomClientLib/MsmPcomClientLib.inf
   HtcLeoVibrationLib|HtcLeoPkg/GPLLibrary/HtcLeoVibrationLib/HtcLeoVibrationLib.inf
@@ -89,7 +88,6 @@
   HtcLeoMicroPLib|HtcLeoPkg/Library/HtcLeoMicroPLib/MicroPLib.inf
 
   # SoC Drivers libraries
-  MsmTargetClockLib|HtcLeoPkg/GPLLibrary/MsmTargetClockLib/MsmTargetClockLib.inf
   MsmTargetGpioLib|HtcLeoPkg/Library/MsmTargetGpioLib/MsmTargetGpioLib.inf
   KeypadDeviceHelperLib|HtcLeoPkg/Library/KeypadDeviceHelperLib/KeypadDeviceHelperLib.inf
   KeypadDeviceImplLib|HtcLeoPkg/Library/KeypadDeviceImplLib/KeypadDeviceImplLib.inf
@@ -232,9 +230,9 @@
   MdeModulePkg/Universal/StatusCodeHandler/RuntimeDxe/StatusCodeHandlerRuntimeDxe.inf
 
   # SoC Drivers
-  HtcLeoPkg/Drivers/ClockDxe/ClockDxe.inf
+  HtcLeoPkg/GPLDrivers/ClockDxe/ClockDxe.inf
   HtcLeoPkg/Drivers/GpioDxe/GpioDxe.inf
-  HtcLeoPkg/GPLDrivers/SdccDxe/SdccDxe.inf
+  HtcLeoPkg/GPLDrivers/SdCardDxe/SdCardDxe.inf
   HtcLeoPkg/Drivers/GenericKeypadDeviceDxe/GenericKeypadDeviceDxe.inf
   HtcLeoPkg/Drivers/KeypadDxe/KeypadDxe.inf
   HtcLeoPkg/Drivers/I2CDxe/I2CDxe.inf

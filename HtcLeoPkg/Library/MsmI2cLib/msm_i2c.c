@@ -400,15 +400,12 @@ static int msm_i2c_recover_bus_busy(void)
 	return ERR_NOT_READY;
 }
 
-extern UINTN ClkEnable(UINTN Id);
-extern VOID ClkDisable(UINTN Id);
-
 int msm_i2c_xfer(struct i2c_msg msgs[], int num)
 {
 	//DEBUG((EFI_D_ERROR, "MSM_I2C_XFER FUNCTION \n"));
 	int ret, ret_wait;
 	//DEBUG((EFI_D_ERROR, "ABOUT TO ENABLE SOME CLOCK \n"));
-	ClkEnable(dev.pdata->clk_nr);
+	clk_enable(dev.pdata->clk_nr);
 	//DEBUG((EFI_D_ERROR, "CLOCK ENABLED \n"));
 	//DEBUG((EFI_D_ERROR, "ABOUT TO UNMASK SOME INTERRUPT \n"));
 	unmask_interrupt(dev.pdata->irq_nr);
@@ -523,7 +520,7 @@ err:
 //DEBUG((EFI_D_ERROR, "ERROR STATE ENTERED I2C XFER"));
 //MicroSecondDelay(20000);
 	mask_interrupt(dev.pdata->irq_nr);
-	ClkDisable(dev.pdata->clk_nr);
+	clk_disable(dev.pdata->clk_nr);
 	
 	return ret;
 }
@@ -603,7 +600,7 @@ int msm_i2c_probe(struct msm_i2c_pdata* pdata)
 	//EfiAcquireLock(&MySpinLock);
 	mask_interrupt(dev.pdata->irq_nr);
 	dev.pdata->set_mux_to_i2c(0);
-	ClkEnable(dev.pdata->clk_nr);
+	clk_enable(dev.pdata->clk_nr);
 	
 	int i2c_clk 	= 19200000;
 	int target_clk 	= 100000;
@@ -623,7 +620,7 @@ int msm_i2c_probe(struct msm_i2c_pdata* pdata)
 	//I2C_DBG(//DEBUGLEVEL, "msm_i2c_probe: clk_ctl %x, %d Hz\n", clk_ctl, i2c_clk / (2 * ((clk_ctl & 0xff) + 3)));
 	//DEBUG((EFI_D_ERROR, "msm_i2c_probe: clk_ctl %x, %d Hz\n", clk_ctl, i2c_clk / (2 * ((clk_ctl & 0xff) + 3))));
 
-	ClkDisable(dev.pdata->clk_nr);
+	clk_disable(dev.pdata->clk_nr);
 	register_int_handler(dev.pdata->irq_nr, msm_i2c_isr, NULL);
 	unmask_interrupt(dev.pdata->irq_nr);
 	//exit_critical_section();
@@ -641,7 +638,7 @@ void msm_i2c_remove() {
 	//OldTpl5 = gBS->RaiseTPL (TPL_HIGH_LEVEL);
 	//EfiAcquireLock(&MySpinLock);
 	mask_interrupt(dev.pdata->irq_nr);
-	ClkDisable(dev.pdata->clk_nr);
+	clk_disable(dev.pdata->clk_nr);
 	dev.pdata->set_mux_to_i2c(0);
 	dev.pdata = NULL;
 	//exit_critical_section();

@@ -126,8 +126,8 @@
 #define NR_CLKS			100
 
 void msm_clock_init(void);
-UINTN ClkEisable(UINTN Id);
-VOID ClkDisable(UINTN Id);
+int clk_enable(unsigned id);
+void clk_disable(unsigned id);
 int clk_set_rate(unsigned id, unsigned freq);
 int msm_pll_request(unsigned id, unsigned on);
 

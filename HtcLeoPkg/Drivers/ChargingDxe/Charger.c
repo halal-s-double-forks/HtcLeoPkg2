@@ -32,6 +32,7 @@
 #include <Chipset/timer.h>
 #include <Library/LKEnvLib.h>
 #include <Library/gpio.h>
+#include <Library/DS2647.h>
 
 
 // USB
@@ -50,10 +51,49 @@ EFI_EVENT m_CallbackTimer = NULL;
 EFI_EVENT m_ExitBootServicesEvent = NULL;
 BOOLEAN usbConnected = false;
 
+enum PSY_CHARGER_STATE {
+	CHG_OFF,
+	CHG_AC,
+	CHG_USB_LOW,
+	CHG_USB_HIGH,
+	CHG_OFF_FULL_BAT,
+};
+
+
     //toDo
     //get usb status, done read the value and check what to do with it
     //be able to get battery voltage
     //enable charging maybe use keypad leds as a charging indicator since we cant use i2c
+
+    static void EFIAPI SetCharger(enum PSY_CHARGER_STATE state)
+{
+	chgr_state = state;
+	switch (state) {
+		case CHG_USB_LOW:
+			gpio_set(HTCLEO_GPIO_BATTERY_CHARGER_ENABLE, 0);
+			gpio_config(HTCLEO_GPIO_BATTERY_CHARGER_ENABLE, GPIO_OUTPUT);
+			gpio_set(HTCLEO_GPIO_BATTERY_CHARGER_CURRENT, 0);
+			gpio_config(HTCLEO_GPIO_BATTERY_CHARGER_CURRENT, GPIO_OUTPUT);
+			break;
+		case CHG_AC: case CHG_USB_HIGH:
+			gpio_set(HTCLEO_GPIO_BATTERY_CHARGER_CURRENT, 1);
+			gpio_config(HTCLEO_GPIO_BATTERY_CHARGER_CURRENT, GPIO_OUTPUT);
+			gpio_set(HTCLEO_GPIO_BATTERY_CHARGER_ENABLE, 0);
+			gpio_config(HTCLEO_GPIO_BATTERY_CHARGER_ENABLE, GPIO_OUTPUT);
+			break;
+		case CHG_OFF_FULL_BAT: // zzz
+		case CHG_OFF:
+		default:	
+			// 0 enable; 1 disable;
+			gpio_set(HTCLEO_GPIO_BATTERY_CHARGER_ENABLE, 1);
+			gpio_config(HTCLEO_GPIO_BATTERY_CHARGER_ENABLE, GPIO_OUTPUT);
+			gpio_set(HTCLEO_GPIO_BATTERY_CHARGER_CURRENT, 1);
+			gpio_config(HTCLEO_GPIO_BATTERY_CHARGER_CURRENT, GPIO_OUTPUT);
+			/*gpio_set(HTCLEO_GPIO_POWER_USB, 0);
+			gpio_config(HTCLEO_GPIO_POWER_USB, GPIO_OUTPUT);*/
+			break;
+	}
+}
 
 BOOLEAN EFIAPI CheckUsbStatus(
     IN EFI_EVENT Event, 
@@ -103,11 +143,10 @@ VOID EFIAPI ChangeChargingStatus(
 
 VOID EFIAPI WantsCharging(
     IN EFI_EVENT Event, 
-    IN VOID *Context,
-    BOOLEAN shouldCharge
-)
+    IN VOID *Context)
 {
   BOOLEAN usbStatus = CheckUsbStatus(NULL,NULL);
+  UINT32 voltage = ds2746_voltage(DS2746_I2C_SLAVE_ADDR);
   //get battery volate here and calc to percent
   if (usbStatus){ //todo add battery percentage check somelike battery < 80 % && usbStatus should ensure we wont overcharge
 
@@ -120,7 +159,7 @@ VOID EFIAPI ChargingDxeInit(IN EFI_HANDLE         ImageHandle, IN EFI_SYSTEM_TAB
 
 
     EFI_STATUS Status;
-  //install a timer to check for usb cable status every like 5 seconds
+  //install a timer to check for want charging every like 5 seconds
     Status = gBS->CreateEvent(
         EVT_NOTIFY_SIGNAL | EVT_TIMER,
         TPL_CALLBACK, CheckUsbStatus, NULL,

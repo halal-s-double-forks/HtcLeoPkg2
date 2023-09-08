@@ -66,6 +66,7 @@ APRIORI DXE {
   INF MdeModulePkg/Universal/WatchdogTimerDxe/WatchdogTimer.inf
   INF MdeModulePkg/Universal/SecurityStubDxe/SecurityStubDxe.inf
   INF EmbeddedPkg/MetronomeDxe/MetronomeDxe.inf
+  INF HtcLeoPkg/Drivers/I2CDxe/I2CDxe.inf
 
   #
   # FAT filesystem + GPT/MBR partitioning

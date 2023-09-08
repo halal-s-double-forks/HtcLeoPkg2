@@ -37,6 +37,6 @@
 void EFIAPI msm_set_i2c_mux(int mux_to_i2c);
 static struct msm_i2c_pdata i2c_pdata;
 EFI_STATUS dumpI2CMemory(void);
-RETURN_STATUS EFIAPI MsmI2cInitialize(VOID);
+//RETURN_STATUS EFIAPI MsmI2cInitialize(VOID);
 
 #endif  // I2C_MEMORY_DUMP_H

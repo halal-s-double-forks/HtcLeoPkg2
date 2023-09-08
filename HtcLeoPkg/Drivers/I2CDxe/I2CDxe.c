@@ -46,6 +46,8 @@ I2CDxeInitialize(
 
 
 	DEBUG((EFI_D_ERROR, "I2CDxe init start \n"));
+  ZeroMem((void*)0xA9900000, 0x00100000);
+  MicroSecondDelay(2000000);
   OldTpl = gBS->RaiseTPL(TPL_HIGH_LEVEL);
 	 Status = MsmI2cInitialize();
    ASSERT_EFI_ERROR(Status);
@@ -55,7 +57,7 @@ I2CDxeInitialize(
    gBS->RestoreTPL(OldTpl);
 
 	DEBUG((EFI_D_ERROR, "I2CDxe init done! \n"));
-  
+  MicroSecondDelay(10000000);
 
 	return Status;
 }

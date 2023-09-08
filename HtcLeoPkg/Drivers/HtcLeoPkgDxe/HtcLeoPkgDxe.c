@@ -77,6 +77,48 @@ OnEndOfDxe (
 {
 }
 
+// Replacement for 'htcleo_boot'
+void htcleo_prepare_for_linux(void)
+{
+	// Martijn Stolk's code so kernel will not crash. aux control register
+	__asm__ volatile("MRC p15, 0, r0, c1, c0, 1\n"
+					 "BIC r0, r0, #0x40\n"
+					 "BIC r0, r0, #0x200000\n"
+					 "MCR p15, 0, r0, c1, c0, 1");
+
+	// Disable VFP
+	__asm__ volatile("MOV R0, #0\n"
+					 "FMXR FPEXC, r0");
+
+    // disable mmu
+	__asm__ volatile("MRC p15, 0, r0, c1, c0, 0\n"
+					 "BIC r0, r0, #(1<<0)\n"
+					 "MCR p15, 0, r0, c1, c0, 0\n"
+					 "ISB");
+	
+	// Invalidate the UTLB
+	__asm__ volatile("MOV r0, #0\n"
+					 "MCR p15, 0, r0, c8, c7, 0");
+
+	// Clean and invalidate cache - Ensure pipeline flush
+	__asm__ volatile("MOV R0, #0\n"
+					 "DSB\n"
+					 "ISB");
+
+	__asm__ volatile("BX LR");
+}
+
+EFI_EVENT_NOTIFY EFIAPI ExitBootServicesEventNotify(    IN EFI_EVENT Event,IN VOID* Context
+) {
+    // Your code to be executed when Exit Boot Services is called
+    // This code will execute after the OS (in this case, Linux) has taken control of the system
+
+    // You can add any actions or initialization required here
+  htcleo_prepare_for_linux();
+    return EFI_SUCCESS;
+}
+
+
 EFI_STATUS
 EFIAPI
 HtcLeoPkgEntryPoint (
@@ -86,6 +128,20 @@ HtcLeoPkgEntryPoint (
 {
   EFI_STATUS            Status;
   EFI_EVENT             EndOfDxeEvent;
+
+  EFI_EVENT ExitBootServicesEvent;
+
+Status = gBS->CreateEvent(
+    EVT_SIGNAL_EXIT_BOOT_SERVICES,  // The event type for Exit Boot Services
+    TPL_CALLBACK,                   // The task priority level
+    ExitBootServicesEventNotify,    // The event function
+    NULL,                           // Context (you can pass data if needed)
+    &ExitBootServicesEvent          // The created event
+);
+
+if (EFI_ERROR(Status)) {
+    // Handle error
+}
 
   Status = gBS->LocateProtocol (&gEfiCpuArchProtocolGuid, NULL, (VOID **)&gCpu);
   ASSERT_EFI_ERROR(Status);

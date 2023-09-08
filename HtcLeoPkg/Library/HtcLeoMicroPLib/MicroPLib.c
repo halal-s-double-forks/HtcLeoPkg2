@@ -71,7 +71,7 @@ MicroPInitialize(VOID)
 	microp_i2c_probe(&microp_pdata);
   DEBUG((EFI_D_ERROR, "ABOUT TO TURN LED GREEN \n"));
   MicroSecondDelay(3000);
-  htcleo_led_set_mode(1);
+  //htcleo_led_set_mode(1);
   DEBUG((EFI_D_ERROR, "LED NOW SHOULD BE GREEN \n"));
   MicroSecondDelay(2000);
 

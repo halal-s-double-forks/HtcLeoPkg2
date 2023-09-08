@@ -28,6 +28,7 @@ int microp_i2c_read(uint8_t addr, uint8_t *data, int length)
 	for (retry = 0; retry <= MSM_I2C_READ_RETRY_TIMES; retry++) {
 				DEBUG((EFI_D_ERROR, "FOR LOOP ENTERED \n"));
 		if (msm_i2c_xfer(msgs, 2) == 2){
+			DEBUG((EFI_D_ERROR, "BREAK !!!!!! \n"));
 			break;
 			}
 			DEBUG((EFI_D_ERROR, "MSM_I2C_XFER FINISHED YAY !!!!!! \n"));
@@ -289,7 +290,7 @@ void microp_i2c_probe(struct microp_platform_data *kpdata)
 	pdata = kpdata;
 	
 	uint8_t data[6];
-	if (microp_i2c_read(MICROP_I2C_RCMD_VERSION, data, 2) < 0) {
+	if (microp_i2c_read(MICROP_I2C_RCMD_VERSION, &data, 2) < 0) {
 		msm_microp_i2c_status = 0;
 		//printf("microp get version failed!\n");
         DEBUG((EFI_D_ERROR, "microp get version failed! \n"));

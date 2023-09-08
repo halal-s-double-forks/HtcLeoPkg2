@@ -179,8 +179,8 @@ static bool msm_i2c_fill_write_buffer(void)
 	if (dev.cnt == 1 && dev.rem == 1)
 		val |= I2C_WRITE_DATA_LAST_BYTE;
 	msm_i2c_write_delay();
-	//DEBUG((EFI_D_ERROR, "writel(%x, %x + %x)\n", val, dev.pdata->i2c_base, I2C_WRITE_DATA));
-	//MicroSecondDelay(1000);
+	DEBUG((EFI_D_ERROR, "writel(%x, %x + %x)\n", val, dev.pdata->i2c_base, I2C_WRITE_DATA));
+	MicroSecondDelay(1000);
 	writel(val, dev.pdata->i2c_base + I2C_WRITE_DATA);
 	dev.pos++;
 	dev.cnt--;
@@ -307,24 +307,25 @@ static int msm_i2c_poll_notbusy(int warn)
 	while (retries != 200) {
 		uint32_t status = readl(dev.pdata->i2c_base + I2C_STATUS);
 		uint32_t bit_value = (status >> 7) & 0x01;
-		//DEBUG((EFI_D_ERROR, "Value of bit 7 is %d\n", bit_value));
+		DEBUG((EFI_D_ERROR, "Status AND I2C_STATUS_BUS_ACTIVE %u\n", !(status & I2C_STATUS_BUS_ACTIVE)));
 		if (!(status & I2C_STATUS_BUS_ACTIVE)) {
 
 			if (retries && warn){
 				//I2C_DBG(DEBUGLEVEL, "Warning bus was busy (%d)\n", retries);
-				//DEBUG((EFI_D_ERROR, "Warning bus was busy retries=%d\n", retries));
+				DEBUG((EFI_D_ERROR, "Warning bus was busy retries=%d\n", retries));
 				
 			}
 			return 0;
 		}
 		
-		if (retries++ > 100){
-			//MicroSecondDelay(10);
+		if (retries > 100){
+			MicroSecondDelay(10000);
 			}
+		retries++;
 	}
 	
 	//I2C_ERR("Error waiting for notbusy\n");
-	//DEBUG((EFI_D_ERROR, "Error waiting for notbusy \n"));
+	DEBUG((EFI_D_ERROR, "Error waiting for notbusy \n"));
 	//MicroSecondDelay(2000);
 	return ERR_TIMED_OUT;
 }
@@ -412,7 +413,7 @@ int msm_i2c_xfer(struct i2c_msg msgs[], int num)
 	//DEBUG((EFI_D_ERROR, "INTTERRUPT UNMASKED \n"));
 
 	ret = msm_i2c_poll_notbusy(1);
-	//DEBUG((EFI_D_ERROR, "MSM_I2C_POLL_NOTBUSY RETURNED %d\n", ret));
+	DEBUG((EFI_D_ERROR, "MSM_I2C_POLL_NOTBUSY RETURNED %d\n", ret));
 	//MicroSecondDelay(2000);
 
 	if (ret) {
@@ -485,7 +486,7 @@ int msm_i2c_xfer(struct i2c_msg msgs[], int num)
 		//MicroSecondDelay(2000);
 		ret_wait = msm_i2c_recover_bus_busy();
 		if (ret_wait != 0){
-			//DEBUG((EFI_D_ERROR, "ERROR IN RECOVERING THE BUS\n"));
+			DEBUG((EFI_D_ERROR, "ERROR IN RECOVERING THE BUS\n"));
 			//MicroSecondDelay(5000);
 			goto err;
 		}
@@ -516,9 +517,10 @@ int msm_i2c_xfer(struct i2c_msg msgs[], int num)
 		I2C_ERR("Error during data xfer (%d)\n", ret);
 		msm_i2c_recover_bus_busy();
 	} */
+	return ret;
 err:
-//DEBUG((EFI_D_ERROR, "ERROR STATE ENTERED I2C XFER"));
-//MicroSecondDelay(20000);
+DEBUG((EFI_D_ERROR, "ERROR STATE ENTERED I2C XFER"));
+// MicroSecondDelay(20000);
 	mask_interrupt(dev.pdata->irq_nr);
 	clk_disable(dev.pdata->clk_nr);
 	

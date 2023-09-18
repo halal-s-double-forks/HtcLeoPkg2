@@ -13,7 +13,7 @@ chmod +x build_boot_shim.sh
 
 cat BootShim/BootShim.bin workspace/Build/QSD8250/DEBUG_GCC5/FV/QSD8250_UEFI.fd >>ImageResources/Tools/lk.bin
 
-mkbootimg --kernel ImageResources/Tools/lk.bin --base 0x11800000 --kernel_offset 0x00008000 -o ImageResources/uefi.img
+mkbootimg --kernel ImageResources/Tools/lk.bin --base 0x20000000 --kernel_offset 0x00008000 -o ImageResources/uefi.img
 
 # NBH creation
 if [ ! -f ImageResources/Tools/nbgen ]; then

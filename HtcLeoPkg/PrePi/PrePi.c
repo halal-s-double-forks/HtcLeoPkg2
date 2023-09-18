@@ -30,8 +30,8 @@ PainScreen(
   IN  UINTN   Colour
 )
 {
-  UINT8 *start = (UINT8 *)0x02A00000;
-  UINT8 *end = (UINT8 *)0x02ABBB00;  
+  UINT8 *start = (UINT8 *)0x03B00000;
+  UINT8 *end = (UINT8 *)0x03E00000;  
 
   for (UINT8 *ptr = start; ptr < end; ptr++) {
     *ptr = 0;

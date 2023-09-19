@@ -11,6 +11,7 @@
 | Charging      | Supported in cLK since 1.5.x            |   ❌   |
 | Battery Gauge | Supported in cLK since 1.5.x (needs i2c)|   ❌   |
 | Keypad        | Loosely based on cLK driver             |   ✅   |
+| UART          | Works based on msm_serial_debug         |   ✅   |
 
 ## Loading
 UEFI can be either chainloaded as a kernel from cLK, as well as flashed to boot directly from HSPL.

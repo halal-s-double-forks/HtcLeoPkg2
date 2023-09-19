@@ -38,6 +38,7 @@ STATIC struct ReservedMemory {
     { 0x00100000, 0x00100000 },    // SMEM
     { 0x00200000, 0x00200000 },    // OEMSBL
     { 0x00400000, 0x02100000 },    // AMSS
+    { 0xA9A00000, 0x00001000 },    //UART
     { 0x03B00000, 0x00300000 },    // Display Reserved
 };
 
@@ -120,15 +121,15 @@ ArmPlatformGetVirtualMemoryMap (
     // SOC peripherals before DDR
     VirtualMemoryTable[Index].PhysicalBase    = 0x00000000;
     VirtualMemoryTable[Index].VirtualBase     = VirtualMemoryTable[Index].PhysicalBase;
-    VirtualMemoryTable[Index].Length          = PcdGet64 (PcdSystemMemoryBase) - 0x01800000;
+    VirtualMemoryTable[Index].Length          = PcdGet64 (PcdSystemMemoryBase);
     VirtualMemoryTable[Index].Attributes      = ARM_MEMORY_REGION_ATTRIBUTE_DEVICE;
     Index++;
 
-    // MPU protected DDR
-    VirtualMemoryTable[Index].PhysicalBase    = 0x10000000;
-    VirtualMemoryTable[Index].VirtualBase     = VirtualMemoryTable[Index].PhysicalBase;
-    VirtualMemoryTable[Index].Length          = PcdGet64 (PcdSystemMemoryBase) - 0x10000000;
-    VirtualMemoryTable[Index].Attributes      = WRITE_BACK_XN;
+    // // MPU protected DDR
+    // VirtualMemoryTable[Index].PhysicalBase    = 0x10000000;
+    // VirtualMemoryTable[Index].VirtualBase     = VirtualMemoryTable[Index].PhysicalBase;
+    // VirtualMemoryTable[Index].Length          = PcdGet64 (PcdSystemMemoryBase) - 0x10000000;
+    // VirtualMemoryTable[Index].Attributes      = WRITE_BACK_XN;
 
     // DDR - 448 MB section
     VirtualMemoryTable[++Index].PhysicalBase  = PcdGet64 (PcdSystemMemoryBase);

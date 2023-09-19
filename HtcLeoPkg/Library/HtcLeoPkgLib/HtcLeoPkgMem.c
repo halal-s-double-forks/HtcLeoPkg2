@@ -38,6 +38,7 @@ STATIC struct ReservedMemory {
     { 0x00100000, 0x00100000 },    // SMEM
     { 0x00200000, 0x00200000 },    // OEMSBL
     { 0x00400000, 0x02100000 },    // AMSS
+    { 0xA9A00000, 0x00001000 },    //UART
     { 0x03B00000, 0x00300000 },    // Display Reserved
 };
 

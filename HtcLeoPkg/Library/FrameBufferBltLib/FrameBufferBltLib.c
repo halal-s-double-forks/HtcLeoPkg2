@@ -125,7 +125,7 @@ FrameBufferBltConfigure (
   }
 
   switch (FrameBufferInfo->PixelFormat) {
-  case PixelBlueGreenRedReserved8BitPerColor:
+  case PixelRedGreenBlueReserved8BitPerColor:
     BitMask = &mRgbPixelMasks; // Use RGB565 pixel format for RGB888 mode
     break;
 

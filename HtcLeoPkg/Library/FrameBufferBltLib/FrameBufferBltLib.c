@@ -444,10 +444,6 @@ FrameBufferBltLibBufferToVideo (
       Blt = (EFI_GRAPHICS_OUTPUT_BLT_PIXEL *) ((UINT8 *) BltBuffer + (SrcY * Delta) + ((SourceX + IndexX) * sizeof (EFI_GRAPHICS_OUTPUT_BLT_PIXEL)));
       Color = ((Blt->Red >> 3) << 11) | ((Blt->Green >> 2) << 5) | (Blt->Blue >> 3);
 
-      if (Configure->PixelFormat == PixelBlueGreenRedReserved8BitPerColor) {
-        // Invert the color for the RGB565 format
-        Color = (UINT16) (~Color);
-      }
 
       *(UINT16 *) (Destination + (IndexX * Configure->BytesPerPixel)) = Color;
     }

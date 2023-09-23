@@ -31,6 +31,7 @@
 [Guids.common]
   gHtcLeoPkgTokenSpaceGuid        = { 0x99a14446, 0xaad7, 0xe460, {0xb4, 0xe5, 0x1f, 0x79, 0xaa, 0xa4, 0x93, 0xfd } }
   gQcomTokenSpaceGuid = { 0x59f58449, 0x99e1, 0x4a19, { 0x86, 0x65, 0x12, 0xd6, 0x37, 0xed, 0xbe, 0x5e } }
+
   
 [Protocols]
   gEFIDroidKeypadDeviceProtocolGuid = { 0xb27625b5, 0x0b6c, 0x4614, { 0xaa, 0x3c, 0x33, 0x13, 0xb5, 0x1d, 0x36, 0x46 } }
@@ -49,6 +50,12 @@
   # Memory serial
   gHtcLeoPkgTokenSpaceGuid.PcdPstoreAddress|0x2FE00000|UINT32|0x0000a406
   gHtcLeoPkgTokenSpaceGuid.PcdPstoreSize|0x200000|UINT32|0x0000a407
+
+
+    # PcdSerialRegisterBase   - Define a base address of UEFI console UART
+  # PcdKdUartInstance - UART instance that should be used for Windows
+  gHtcLeoPkgTokenSpaceGuid.PcdKdUartInstance|1|UINT32|0x11
+  gHtcLeoPkgTokenSpaceGuid.PcdSerialRegisterBase|0x00000000|UINT32|0x12
 
   # GPT Timer
   gHtcLeoPkgTokenSpaceGuid.PcdMsmGptBase|0xAC100000|UINT32|0x0000a408

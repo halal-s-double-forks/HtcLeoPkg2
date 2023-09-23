@@ -151,6 +151,10 @@
 
   gEmbeddedTokenSpaceGuid.PcdMetronomeTickPeriod|1000
 
+
+    gHtcLeoPkgTokenSpaceGuid.PcdSerialRegisterBase|0x02020000   # UART1
+  gHtcLeoPkgTokenSpaceGuid.PcdKdUartInstance|1   
+
   #
   #
   # Fastboot
@@ -291,7 +295,7 @@
   MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
   MdeModulePkg/Universal/Acpi/AcpiPlatformDxe/AcpiPlatformDxe.inf
   MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
-#  HtcLeoPkg/AcpiTables/AcpiTables.inf
+  HtcLeoPkg/AcpiTables/AcpiTables.inf
 
   #
   # SMBIOS Support

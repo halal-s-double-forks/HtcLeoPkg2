@@ -248,13 +248,13 @@ FrameBufferBltLibVideoFill(
   }
 
   // Convert color to 5-6-5 RGB format
-  Uint16 = ((Color->Red >> 3) << 11) | ((Color->Green >> 2) << 5) | (Color->Blue >> 3);
+  //Uint16 = ((Color->Red >> 3) << 11) | ((Color->Green >> 2) << 5) | (Color->Blue >> 3);
 
   // Calculate the offset to the starting pixel
   UINTN Offset = (DestinationY * Configure->PixelsPerScanLine) + DestinationX;
   Offset = Configure->BytesPerPixel * Offset;
   Destination = Configure->FrameBuffer + Offset;
-
+  Offset = 0;
   // Fill the video buffer
   for (IndexY = 0; IndexY < Height; IndexY++) {
     for (IndexX = 0; IndexX < Width; IndexX++) {

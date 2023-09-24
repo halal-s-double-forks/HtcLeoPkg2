@@ -134,7 +134,7 @@ FrameBufferBltConfigure (
   }
 
   switch (FrameBufferInfo->PixelFormat) {
-  case PixelRedGreenBlueReserved8BitPerColor:
+  case PixelBlueGreenRedReserved8BitPerColor:
     //change the pixelformat in lcdc
    // writel((unsigned) fb_cfg.base, MSM_MDP_BASE1 + 0x90008);
     //MmioWrite32(MSM_MDP_BASE1 + 0x90008, (unsigned) 0x90008);

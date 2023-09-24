@@ -19,6 +19,15 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
 #include <Library/FrameBufferBltLib.h>
+#include <Library/BaseLib.h>
+#include <Library/BaseMemoryLib.h>
+#include <Library/IoLib.h>
+#include <Library/PcdLib.h>
+
+#define MDP_BGR_565_FORMAT (BIT(14) | (0<<9) | (0<<8) | (1<<6) | (1<<4) | (1<<2) | (2<<0))
+#define MSM_MDP_BASE1 0xAA200000
+#define LCDC_BASE     0xE0000
+#define BIT(bit) (1U << (bit))
 
 struct FRAME_BUFFER_CONFIGURE {
   UINT32                          PixelsPerScanLine;
@@ -126,6 +135,16 @@ FrameBufferBltConfigure (
 
   switch (FrameBufferInfo->PixelFormat) {
   case PixelBlueGreenRedReserved8BitPerColor:
+    //change the pixelformat in lcdc
+   // writel((unsigned) fb_cfg.base, MSM_MDP_BASE1 + 0x90008);
+    //MmioWrite32(MSM_MDP_BASE1 + 0x90008, (unsigned) 0x90008);
+  //   MmioWrite32(MSM_MDP_BASE1 + 0x40050, MDP_BGR_565_FORMAT);
+
+  //   	/* register flush and enable LCDC */
+  //     MmioWrite32(MSM_MDP_BASE1 + 0x18000, 0x11);
+  // MmioWrite32(MSM_MDP_BASE1 + LCDC_BASE + 0x0, 0x1);
+
+
     BitMask = &mRgbPixelMasks; // Use RGB565 pixel format for RGB888 mode
     break;
 

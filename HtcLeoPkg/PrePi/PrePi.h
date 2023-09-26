@@ -55,13 +55,18 @@ extern UINT64  mSystemMemoryEnd;
 #define CLR_B 0x1
 #define CLR_R 0x2
 #define MDP_GET_PACK_PATTERN(a,x,y,z,bit) (((a)<<(bit*3))|((x)<<(bit*2))|((y)<<bit)|(z))
-#define DMA_PACK_ALIGN_LSB 0
+#define DMA_PACK_TIGHT                      BIT(6)
+#define DMA_PACK_LOOSE                      0
+#define DMA_PACK_ALIGN_LSB                  0
 #define DMA_PACK_PATTERN_RGB				\
         (MDP_GET_PACK_PATTERN(0,CLR_R,CLR_G,CLR_B,2)<<8)
+#define DMA_PACK_PATTERN_BGR \
+       (MDP_GET_PACK_PATTERN(0, CLR_B, CLR_G, CLR_R, 2)<<8)
 #define DMA_DITHER_EN                       BIT(24)
 #define DMA_OUT_SEL_LCDC                    BIT(20)
 #define DMA_IBUF_FORMAT_RGB565              BIT(25)
 #define DMA_IBUF_FORMAT_RGB888              (0 << 25)
+#define DMA_IBUF_FORMAT_xRGB8888_OR_ARGB8888  BIT(26)
 
 /* MDP regs */
 #define REG_MDP(offset)                       MSM_MDP_BASE1 + offset

@@ -44,6 +44,7 @@ extern UINT64  mSystemMemoryEnd;
 #define GreenYellow     0xAFE5      /* 173, 255,  47 */
 #define Pink            0xF81F
 
+/* MDP-related defines */
 #define MSM_MDP_BASE1 	0xAA200000
 #define LCDC_BASE     	0xE0000
 

@@ -12,7 +12,7 @@
 *
 **/
 
-OperationRegion (GLBL, SystemMemory, 0x10817000, 0x10)
+/*OperationRegion (GLBL, SystemMemory, 0x10817000, 0x10)
 Field (GLBL, AnyAcc, Nolock, Preserve)
 {
   Offset (0),       // Miscellaneous Dynamic Registers:
@@ -25,7 +25,7 @@ Field (GLBL, AnyAcc, Nolock, Preserve)
   MC0V, 8,          // MAC 0 Valid
   MC0L, 32,         // MAC Address 0 Low
   MC0H, 16,         // MAC Address 0 High
-}
+}*/
 
 Device (CPU0)
 {

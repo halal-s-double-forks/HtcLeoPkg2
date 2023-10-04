@@ -2,22 +2,19 @@
 
 ## Status 
 
-| Function      | Notes                                   | status |
+| Function      | Notes                                   | Status |
 |---------------|-----------------------------------------|--------|
 | GPIO          | Based on cLK driver                     |   ✅   |
 | SD Card       | Based on cLK driver                     |   ✅   |
-| I2C           | Driver exists in cLK                    |   ❌   |
+| I2C           | Driver exists in cLK                    |   ✅   |
 | Panel         | Driver exists in cLK                    |   ❌   |
 | Charging      | Supported in cLK since 1.5.x            |   ❌   |
 | Battery Gauge | Supported in cLK since 1.5.x (needs i2c)|   ❌   |
+| USB           | Driver exists in cLK                    |   ❌   |
 | Keypad        | Loosely based on cLK driver             |   ✅   |
 
 ## Loading
 UEFI can be either chainloaded as a kernel from cLK, as well as flashed to boot directly from HSPL.
-
-## To-Do
-Test/fix loading linux
-Get to load ReactOS
 
 ## Credits
  - Cotulla and DFT for the work on HD2
@@ -26,6 +23,7 @@ Get to load ReactOS
  - imbushuo for creating PrimeG2Pkg
  - ivoszbg for Msm8916Pkg
  - winocm for the iPhone4Pkg
+ - feherneoh for all the helpfull ideas and shared knowledge
 
 ## License
 All code except drivers in `GplDrivers` directory is licensed under BSD 2-Clause. 

@@ -18,5 +18,6 @@ DefinitionBlock ("DSDT.aml", "DSDT", 5, "MSFT", "EDK2", 1)
   Scope (\_SB_)
   {
     include("Dsdt-Platform.asl")
+    include("Dsdt-SD.asl")
   } // \_SB_
 }

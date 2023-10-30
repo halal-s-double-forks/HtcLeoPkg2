@@ -202,7 +202,7 @@
   MdeModulePkg/Universal/ResetSystemRuntimeDxe/ResetSystemRuntimeDxe.inf
   EmbeddedPkg/RealTimeClockRuntimeDxe/RealTimeClockRuntimeDxe.inf
   EmbeddedPkg/MetronomeDxe/MetronomeDxe.inf
-  HtcLeoPkg/Drivers/HeartbeatDxe/HeartbeatDxe.inf
+  # HtcLeoPkg/Drivers/HeartbeatDxe/HeartbeatDxe.inf
 
   MdeModulePkg/Universal/Console/ConPlatformDxe/ConPlatformDxe.inf
   HtcLeoPkg/Drivers/ConSplitterDxe/ConSplitterDxe.inf
@@ -270,8 +270,8 @@
   #
   EmbeddedPkg/Application/AndroidFastboot/AndroidFastbootApp.inf
 
-    HtcLeoPkg/Application/TetrisApp/tetris.inf
-
+  # Tetris
+  HtcLeoPkg/Application/TetrisApp/tetris.inf
 
   #
   # FAT filesystem + GPT/MBR partitioning

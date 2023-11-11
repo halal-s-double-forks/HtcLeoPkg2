@@ -253,11 +253,8 @@ ClkGetRate(UINT32 Id)
 UINTN
 ClkEnable(UINTN Id)
 {
-	if (ClocksLookup[Id] != -1) {
-    	msm_proc_comm(PCOM_CLK_REGIME_SEC_ENABLE, &ClocksLookup[Id], 0);
-    	return ClocksLookup[Id];
-  	}
-	return -1;
+    msm_proc_comm(PCOM_CLK_REGIME_SEC_ENABLE, &ClocksLookup[Id], 0);
+    return ClocksLookup[Id];
 }
 
 VOID
@@ -272,22 +269,6 @@ int msm_pll_request(unsigned id, unsigned on)
 {
 	on = !!on;
 	return msm_proc_comm(PCOM_CLKCTL_RPC_PLL_REQUEST, &id, &on);
-}
-
-static int ClocksOn[] = {
-	SDC1_CLK,
-	SDC2_CLK,
-	SDC3_CLK,
-	SDC4_CLK,
-};
-
-EFI_STATUS
-MsmClockInit(VOID)
-{
-	for (int i = 0; i < (int)ARRAY_SIZE(ClocksOn); i++)
-		ClkEnable(ClocksOn[i]);
-
-	return EFI_SUCCESS;
 }
 
 /**
@@ -314,29 +295,27 @@ ClockDxeInitialize(
 	//
 	ASSERT_PROTOCOL_ALREADY_INSTALLED (NULL, &gEmbeddedClockProtocolGuid);
 
+	DEBUG((EFI_D_ERROR, "Fill clocks lookup\n"));
 	FillClocksLookup();
-	if (MsmClockInit() == EFI_SUCCESS)
-	{
-		DEBUG((EFI_D_INFO, "Clock init done!\n"));
+	DEBUG((EFI_D_ERROR, "Enable SDC2 clock\n"));
+	ClkEnable(SDC2_CLK);
+
+	DEBUG((EFI_D_ERROR, "Clock init done!\n"));
 		
-		// Install the Embedded Clock Protocol onto a new handle
-		Handle = NULL;
-		Status = gBS->InstallMultipleProtocolInterfaces (
-						&Handle,
-						&gEmbeddedClockProtocolGuid,
-						&gClock,
-						NULL
-						);
+	// Install the Embedded Clock Protocol onto a new handle
+	Handle = NULL;
+	Status = gBS->InstallMultipleProtocolInterfaces (
+					&Handle,
+					&gEmbeddedClockProtocolGuid,
+					&gClock,
+					NULL
+					);
 
-		if (EFI_ERROR (Status)) {
-			Status = EFI_OUT_OF_RESOURCES;
-		}
+	if (EFI_ERROR (Status)) {
+		Status = EFI_OUT_OF_RESOURCES;
+	}
 
-		// Setup Scorpion PLL
-		msm_acpu_clock_init(11+6);
-		return EFI_SUCCESS;
-	}
-	else {
-		return EFI_D_ERROR;
-	}
+	// Setup Scorpion PLL
+	msm_acpu_clock_init(11+6);
+	return EFI_SUCCESS;
 }

@@ -57,62 +57,22 @@ PaintScreen(
 VOID
 ReconfigFb()
 {
-  /*writel((unsigned) fb_config.base, MSM_MDP_BASE1 + 0x90008);
-
-	writel((fb_config.height << 16) | fb_config.width, MSM_MDP_BASE1 + 0x90004);
-	writel(fb_config.width * fb_config.bpp / 8, MSM_MDP_BASE1 + 0x9000c);
-	writel(0, MSM_MDP_BASE1 + 0x90010);
-
-	writel(DMA_PACK_ALIGN_LSB|DMA_PACK_PATTERN_RGB|DMA_DITHER_EN|DMA_OUT_SEL_LCDC|
-	       DMA_IBUF_FORMAT_RGB565|DMA_DSTC0G_8BITS|DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS,
-	       MSM_MDP_BASE1 + 0x90000);
-
-  writel(0, MSM_MDP_BASE1 + LCDC_BASE + 0x28);
-	writel(0xff, MSM_MDP_BASE1 + LCDC_BASE + 0x2c);
-	writel(timing_param.lcdc_hsync_skew_dclk, MSM_MDP_BASE1 + LCDC_BASE + 0x30);
-	writel(0, MSM_MDP_BASE1 + LCDC_BASE + 0x38);
-	writel(0, MSM_MDP_BASE1 + LCDC_BASE + 0x1c);
-	writel(0, MSM_MDP_BASE1 + LCDC_BASE + 0x20);
-	writel(0, MSM_MDP_BASE1 + LCDC_BASE + 0x24);
-	writel(1, MSM_MDP_BASE1 + LCDC_BASE + 0x0);*/
-
-
-
-  // Disable FB (?)
-  //MmioWrite32(MSM_MDP_BASE1 + LCDC_BASE + 0x0, 0);
+  // Paint the FB area to black
+  PaintScreen(FB_BGRA8888_BLACK);
 
   // Move the FB to 0x20000000
   MmioWrite32(MSM_MDP_BASE1 + 0x90008, FbAddr);
-
+  // Stride
   MmioWrite32(MSM_MDP_BASE1 + 0x90004, (Height << 16) | Width);
 	MmioWrite32(MSM_MDP_BASE1 + 0x9000c, Width * Bpp / 8);
-  // Stride
-  //MmioWrite32(MDP_DMA_P_BUF_Y_STRIDE, 4 * Width);
-	//MmioWrite32(MSM_MDP_BASE1 + 0x90010, 0);
-
-  // Format (32bpp)
+  // Format (32bpp ARGB)
   MmioWrite32(MDP_DMA_P_CONFIG, DMA_PACK_ALIGN_LSB|DMA_PACK_PATTERN_RGB|DMA_DITHER_EN|
               DMA_OUT_SEL_LCDC|DMA_IBUF_FORMAT_xRGB8888_OR_ARGB8888|DMA_DSTC0G_8BITS|
               DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS);
-  
-
-  /*MmioWrite32(MSM_MDP_BASE1 + LCDC_BASE + 0x28, 0);
-	MmioWrite32(MSM_MDP_BASE1 + LCDC_BASE + 0x2c, 0xff);
-	//MmioWrite32(timing_param.lcdc_hsync_skew_dclk, MSM_MDP_BASE1 + LCDC_BASE + 0x30);
-	MmioWrite32(MSM_MDP_BASE1 + LCDC_BASE + 0x38, 0);
-	MmioWrite32(MSM_MDP_BASE1 + LCDC_BASE + 0x1c, 0);
-	MmioWrite32(MSM_MDP_BASE1 + LCDC_BASE + 0x20, 0);
-	MmioWrite32(MSM_MDP_BASE1 + LCDC_BASE + 0x24, 0);*/
 
   //Ensure all transfers finished
   ArmInstructionSynchronizationBarrier();
   ArmDataMemoryBarrier();
-  
-  // Paint the screen to black
-  PaintScreen(FB_BGRA8888_BLACK);
-
-  // Enable FB (?)
-  //MmioWrite32(MSM_MDP_BASE1 + LCDC_BASE + 0x0, 1);
 }
 
 VOID

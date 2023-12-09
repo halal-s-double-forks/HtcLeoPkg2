@@ -38,26 +38,59 @@ extern UINT64  mSystemMemoryEnd;
 #define MSM_MDP_BASE1 	0xAA200000
 #define LCDC_BASE     	0xE0000
 
-#define BIT(x)  (1<<(x))
+//#define BIT(x)  (1<<(x))
+
+/* MDP 3.1 */
+
 #define DMA_DSTC0G_8BITS (BIT(1)|BIT(0))
 #define DMA_DSTC1B_8BITS (BIT(3)|BIT(2))
 #define DMA_DSTC2R_8BITS (BIT(5)|BIT(4))
+#define DMA_DSTC3A_8BITS (BIT(7)|BIT(6))
+//#define DMA_DSTC0G_8BITS (3<<0)
+//#define DMA_DSTC1B_8BITS (3<<2)
+//#define DMA_DSTC2R_8BITS (3<<4)
+
 #define CLR_G 0x0
 #define CLR_B 0x1
 #define CLR_R 0x2
+#define CLR_ALPHA 0x3
 #define MDP_GET_PACK_PATTERN(a,x,y,z,bit) (((a)<<(bit*3))|((x)<<(bit*2))|((y)<<bit)|(z))
 #define DMA_PACK_TIGHT                      BIT(6)
 #define DMA_PACK_LOOSE                      0
 #define DMA_PACK_ALIGN_LSB                  0
 #define DMA_PACK_PATTERN_RGB				\
-        (MDP_GET_PACK_PATTERN(0,CLR_R,CLR_G,CLR_B,2)<<8)
+        (MDP_GET_PACK_PATTERN(0,CLR_R,CLR_G,CLR_B, 2)<<8)
 #define DMA_PACK_PATTERN_BGR \
-       (MDP_GET_PACK_PATTERN(0, CLR_B, CLR_G, CLR_R, 2)<<8)
-#define DMA_DITHER_EN                       BIT(24)
-#define DMA_OUT_SEL_LCDC                    BIT(20)
-#define DMA_IBUF_FORMAT_RGB565              BIT(25)
-#define DMA_IBUF_FORMAT_RGB888              (0 << 25)
-#define DMA_IBUF_FORMAT_xRGB8888_OR_ARGB8888  BIT(26)
+        (MDP_GET_PACK_PATTERN(0, CLR_B, CLR_G, CLR_R, 2)<<8)
+/* from https://nv-tegra-prod.hwinf-scm-aws.nvidia.com/r/plugins/gitiles/linux-3.10/+/a724eada8c2a7b62463b73ccf73fd0bb6e928aeb/drivers/video/msm/mdp_hw.h */
+#define PPP_PACK_PATTERN_MDP_RGBA_8888 \
+	      MDP_GET_PACK_PATTERN(CLR_ALPHA, CLR_B, CLR_G, CLR_R, 8)
+
+#define PPP_PACK_PATTERN_MDP_BGRA_8888 \
+	MDP_GET_PACK_PATTERN(CLR_ALPHA, CLR_R, CLR_G, CLR_B, 8)
+/* end */
+
+#define DMA_DITHER_EN                         BIT(24)
+#define DMA_OUT_SEL_LCDC                      BIT(20)
+#define DMA_IBUF_FORMAT_RGB888			          (0 << 25)
+#define DMA_IBUF_FORMAT_RGB565			          (1 << 25)
+#define DMA_IBUF_FORMAT_XRGB8888		          (2 << 25)
+//#define DMA_IBUF_FORMAT_xRGB8888_OR_ARGB8888  BIT(26)
+#define DMA_IBUF_FORMAT_MASK			            (3 << 25)
+
+/* MDP 3.1 end*/
+
+/* SURF */
+#define LCDC_FB_WIDTH     800
+#define LCDC_FB_HEIGHT    480
+#define LCDC_HSYNC_PULSE_WIDTH_DCLK 60
+#define LCDC_HSYNC_BACK_PORCH_DCLK  81
+#define LCDC_HSYNC_FRONT_PORCH_DCLK 81
+#define LCDC_HSYNC_SKEW_DCLK        0
+#define LCDC_VSYNC_PULSE_WIDTH_LINES 2
+#define LCDC_VSYNC_BACK_PORCH_LINES  20
+#define LCDC_VSYNC_FRONT_PORCH_LINES 27
+/* SURF end */
 
 /* MDP regs */
 #define REG_MDP(offset)                       MSM_MDP_BASE1 + offset

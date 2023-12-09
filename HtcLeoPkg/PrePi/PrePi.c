@@ -80,46 +80,24 @@ ReconfigFb()
 VOID
 ReconfigFb()
 {
-  //FbAddr = memalign(4096, Width * Height * (Bpp / 8));
-
-  //writel((unsigned) FbAddr, MSM_MDP_BASE1 + 0x90008);
-  writel(FbAddr, MSM_MDP_BASE1 + 0x90008);
-
-  writel((Height << 16) | Width, MSM_MDP_BASE1 + 0x90004);
-	writel(Width * Bpp / 8, MSM_MDP_BASE1 + 0x9000c);
-	//writel(0, MSM_MDP_BASE1 + 0x90010);
-
-  /*writel(DMA_PACK_ALIGN_LSB|DMA_PACK_PATTERN_RGB|DMA_DITHER_EN|DMA_OUT_SEL_LCDC|
-	       DMA_IBUF_FORMAT_RGB565|DMA_DSTC0G_8BITS|DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS,
-	       MSM_MDP_BASE1 + 0x90000);*/
-  /* LSB|PATTERN|DITHER|DMA_OU_SEL|FORMAT|DMA_DST0G|DST1B|DST2R */
+  // Move the FB to 0x20000000
+  MmioWrite32(MDP_DMA_P_BUF_ADDR, FbAddr);
+  // Stride
+  MmioWrite32(MDP_DMA_P_SIZE, (Height << 16) | Width);
+	MmioWrite32(MDP_DMA_P_BUF_Y_STRIDE, Width * Bpp / 8);
   // Format (32bpp ARGB)
-  MmioWrite32(MDP_DMA_P_CONFIG, DMA_PACK_ALIGN_LSB|DMA_PACK_PATTERN_RGB|DMA_DITHER_EN|
-              DMA_OUT_SEL_LCDC|DMA_IBUF_FORMAT_xRGB8888_OR_ARGB8888|DMA_DSTC0G_8BITS|
-              DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS);
+  MmioWrite32(MDP_DMA_P_CONFIG, DMA_PACK_ALIGN_LSB||DMA_DITHER_EN|DMA_PACK_PATTERN_RGB|
+              DMA_OUT_SEL_LCDC|DMA_IBUF_FORMAT_XRGB8888|
+              DMA_DSTC0G_8BITS|DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS);
 
-	int hsync_period  = LCDC_HSYNC_PULSE_WIDTH_DCLK + LCDC_HSYNC_BACK_PORCH_DCLK + Width + LCDC_HSYNC_FRONT_PORCH_DCLK;
-	int vsync_period  = (LCDC_VSYNC_PULSE_WIDTH_LINES + LCDC_VSYNC_BACK_PORCH_LINES + Height + LCDC_VSYNC_FRONT_PORCH_LINES) * hsync_period;
-	int hsync_start_x = LCDC_HSYNC_PULSE_WIDTH_DCLK + LCDC_HSYNC_BACK_PORCH_DCLK;
-	int hsync_end_x   = hsync_period - LCDC_HSYNC_FRONT_PORCH_DCLK - 1;
-	int display_hctl  = (hsync_end_x << 16) | hsync_start_x;
-	int display_vstart= (LCDC_VSYNC_PULSE_WIDTH_LINES + LCDC_VSYNC_BACK_PORCH_LINES) * hsync_period + LCDC_HSYNC_SKEW_DCLK;
-	int display_vend  = vsync_period - (LCDC_VSYNC_FRONT_PORCH_LINES * hsync_period) + LCDC_HSYNC_SKEW_DCLK - 1;
-	
-  writel((hsync_period << 16) | LCDC_HSYNC_PULSE_WIDTH_DCLK, MSM_MDP_BASE1 + 0xe0004);
-	writel(vsync_period, MSM_MDP_BASE1 + 0xe0008);
-	writel(LCDC_VSYNC_PULSE_WIDTH_LINES * hsync_period, MSM_MDP_BASE1 + 0xe000c);
-	writel(display_hctl, MSM_MDP_BASE1 + 0xe0010);
-	writel(display_vstart, MSM_MDP_BASE1 + 0xe0014);
-	writel(display_vend, MSM_MDP_BASE1 + 0xe0018);
-	writel(0, MSM_MDP_BASE1 + 0xe0028);
-	writel(0xff, MSM_MDP_BASE1 + 0xe002c);
-	writel(LCDC_HSYNC_SKEW_DCLK, MSM_MDP_BASE1 + 0xe0030);
-	writel(0, MSM_MDP_BASE1 + 0xe0038);
-	writel(0, MSM_MDP_BASE1 + 0xe001c);
-	writel(0, MSM_MDP_BASE1 + 0xe0020);
-	writel(0, MSM_MDP_BASE1 + 0xe0024);
-	writel(1, MSM_MDP_BASE1 + 0xe0000);
+  //PPP_PACK_PATTERN_MDP_BGRA_8888 weird but ok colors
+  //DMA_PACK_PATTERN_BGRA doesn't work
+
+  //Ensure all transfers finished
+  ArmInstructionSynchronizationBarrier();
+  ArmDataMemoryBarrier();
+
+  MicroSecondDelay(10);
 }
 
 VOID

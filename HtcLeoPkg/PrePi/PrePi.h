@@ -40,6 +40,24 @@ extern UINT64  mSystemMemoryEnd;
 
 //#define BIT(x)  (1<<(x))
 
+// from https://gitlab.utc.fr/mi11/linux/linux-raspberrypi/-/blob/a26c4d1f1428082f6aba79207535527c91115c76/include/linux/msm_mdp.h
+enum {
+	MDP_RGB_565,		/* RGB 565 planar */
+	MDP_XRGB_8888,		/* RGB 888 padded */
+	MDP_Y_CBCR_H2V2,	/* Y and CbCr, pseudo planar w/ Cb is in MSB */
+	MDP_ARGB_8888,		/* ARGB 888 */
+	MDP_RGB_888,		/* RGB 888 planar */
+	MDP_Y_CRCB_H2V2,	/* Y and CrCb, pseudo planar w/ Cr is in MSB */
+	MDP_YCRYCB_H2V1,	/* YCrYCb interleave */
+	MDP_Y_CRCB_H2V1,	/* Y and CrCb, pseduo planar w/ Cr is in MSB */
+	MDP_Y_CBCR_H2V1,	/* Y and CrCb, pseduo planar w/ Cr is in MSB */
+	MDP_RGBA_8888,		/* ARGB 888 */
+	MDP_BGRA_8888,		/* ABGR 888 */
+	MDP_RGBX_8888,		/* RGBX 888 */
+	MDP_IMGTYPE_LIMIT	/* Non valid image type after this enum */
+};
+
+
 /* MDP 3.1 */
 
 #define DMA_DSTC0G_8BITS (BIT(1)|BIT(0))
@@ -70,12 +88,15 @@ extern UINT64  mSystemMemoryEnd;
 	MDP_GET_PACK_PATTERN(CLR_ALPHA, CLR_R, CLR_G, CLR_B, 8)
 /* end */
 
+#define DMA_PACK_PATTERN_BGRA \
+        (MDP_GET_PACK_PATTERN(CLR_ALPHA, CLR_B, CLR_G, CLR_R, 2)<<8)
+
 #define DMA_DITHER_EN                         BIT(24)
 #define DMA_OUT_SEL_LCDC                      BIT(20)
 #define DMA_IBUF_FORMAT_RGB888			          (0 << 25)
 #define DMA_IBUF_FORMAT_RGB565			          (1 << 25)
 #define DMA_IBUF_FORMAT_XRGB8888		          (2 << 25)
-//#define DMA_IBUF_FORMAT_xRGB8888_OR_ARGB8888  BIT(26)
+#define DMA_IBUF_FORMAT_xRGB8888_OR_ARGB8888  BIT(26)
 #define DMA_IBUF_FORMAT_MASK			            (3 << 25)
 
 /* MDP 3.1 end*/

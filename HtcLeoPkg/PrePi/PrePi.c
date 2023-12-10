@@ -74,6 +74,8 @@ ReconfigFb()
               DMA_OUT_SEL_LCDC|DMA_IBUF_FORMAT_XRGB8888|
               DMA_DSTC0G_8BITS|DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS);
 
+  MmioWrite32(MSM_MDP_BASE1 + LCDC_BASE + 0x0, 1); //flush?
+
   //Ensure all transfers finished
   ArmInstructionSynchronizationBarrier();
   ArmDataMemoryBarrier();

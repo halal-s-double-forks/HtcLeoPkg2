@@ -21,8 +21,6 @@
 #include <Library/SerialPortLib.h>
 #include <Library/ArmPlatformLib.h>
 
-extern UINT64  mSystemMemoryEnd;
-
 /* some BGRA8888 color definitions */
 #define FB_BGRA8888_BLACK 0xff000000
 #define FB_BGRA8888_WHITE 0xffffffff
@@ -57,12 +55,6 @@ extern UINT64  mSystemMemoryEnd;
         (MDP_GET_PACK_PATTERN(0,CLR_R,CLR_G,CLR_B, 2)<<8)
 #define DMA_PACK_PATTERN_BGR \
         (MDP_GET_PACK_PATTERN(0, CLR_B, CLR_G, CLR_R, 2)<<8)
-/* from https://nv-tegra-prod.hwinf-scm-aws.nvidia.com/r/plugins/gitiles/linux-3.10/+/a724eada8c2a7b62463b73ccf73fd0bb6e928aeb/drivers/video/msm/mdp_hw.h */
-#define PPP_PACK_PATTERN_MDP_RGBA_8888 \
-	      MDP_GET_PACK_PATTERN(CLR_ALPHA, CLR_B, CLR_G, CLR_R, 8)
-#define PPP_PACK_PATTERN_MDP_BGRA_8888 \
-	      MDP_GET_PACK_PATTERN(CLR_ALPHA, CLR_R, CLR_G, CLR_B, 8)
-/* end */
 
 #define DMA_PACK_PATTERN_BGRA \
         (MDP_GET_PACK_PATTERN(CLR_ALPHA, CLR_B, CLR_G, CLR_R, 2)<<8)
@@ -75,20 +67,6 @@ extern UINT64  mSystemMemoryEnd;
 #define DMA_IBUF_FORMAT_xRGB8888_OR_ARGB8888  (1 << 26)
 #define DMA_IBUF_FORMAT_MASK			            (3 << 25)
 
-/* MDP 3.1 end*/
-
-/* SURF */
-#define LCDC_FB_WIDTH     800
-#define LCDC_FB_HEIGHT    480
-#define LCDC_HSYNC_PULSE_WIDTH_DCLK 60
-#define LCDC_HSYNC_BACK_PORCH_DCLK  81
-#define LCDC_HSYNC_FRONT_PORCH_DCLK 81
-#define LCDC_HSYNC_SKEW_DCLK        0
-#define LCDC_VSYNC_PULSE_WIDTH_LINES 2
-#define LCDC_VSYNC_BACK_PORCH_LINES  20
-#define LCDC_VSYNC_FRONT_PORCH_LINES 27
-/* SURF end */
-
 /* MDP regs */
 #define REG_MDP(offset)                       MSM_MDP_BASE1 + offset
 
@@ -98,6 +76,8 @@ extern UINT64  mSystemMemoryEnd;
 #define MDP_DMA_P_BUF_ADDR                    REG_MDP(0x90008)
 #define MDP_DMA_P_BUF_Y_STRIDE                REG_MDP(0x9000C)
 #define MDP_DMA_P_OP_MODE                     REG_MDP(0x90070)
+
+extern UINT64  mSystemMemoryEnd;
 
 RETURN_STATUS
 EFIAPI

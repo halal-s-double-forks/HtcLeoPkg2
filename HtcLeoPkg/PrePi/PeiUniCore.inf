@@ -56,7 +56,6 @@
   PrePiHobListPointerLib
   PlatformPeiLib
   MemoryInitPeiLib
-  MallocLib
 
 [Ppis]
   gArmMpCoreInfoPpiGuid

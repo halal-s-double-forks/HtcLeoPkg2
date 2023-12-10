@@ -85,7 +85,6 @@
   HtcLeoVibrationLib|HtcLeoPkg/GPLLibrary/HtcLeoVibrationLib/HtcLeoVibrationLib.inf
 
   # SoC Drivers libraries
-  MallocLib|HtcLeoPkg/Library/MallocLib/MallocLib.inf
   StrLib|HtcLeoPkg/Library/StrLib/StrLib.inf
   PTableLib|HtcLeoPkg/Library/PTableLib/PTableLib.inf
   SmemLib|HtcLeoPkg/Drivers/SmemDxe/SmemImplLib.inf

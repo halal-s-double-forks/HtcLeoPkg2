@@ -55,31 +55,13 @@ PaintScreen(
 		}
 	}
 }
-/*
+
 VOID
 ReconfigFb()
 {
   // Paint the FB area to black
   PaintScreen(FB_BGRA8888_BLACK);
 
-  // Move the FB to 0x20000000
-  MmioWrite32(MSM_MDP_BASE1 + 0x90008, FbAddr);
-  // Stride
-  MmioWrite32(MSM_MDP_BASE1 + 0x90004, (Height << 16) | Width);
-	MmioWrite32(MSM_MDP_BASE1 + 0x9000c, Width * Bpp / 8);
-  // Format (32bpp ARGB)
-  MmioWrite32(MDP_DMA_P_CONFIG, DMA_PACK_ALIGN_LSB|DMA_PACK_PATTERN_RGB|DMA_DITHER_EN|
-              DMA_OUT_SEL_LCDC|DMA_IBUF_FORMAT_xRGB8888_OR_ARGB8888|DMA_DSTC0G_8BITS|
-              DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS);
-
-  //Ensure all transfers finished
-  ArmInstructionSynchronizationBarrier();
-  ArmDataMemoryBarrier();
-}*/
-
-VOID
-ReconfigFb()
-{
   // Move the FB to 0x20000000
   MmioWrite32(MDP_DMA_P_BUF_ADDR, FbAddr);
   // Stride
@@ -89,9 +71,6 @@ ReconfigFb()
   MmioWrite32(MDP_DMA_P_CONFIG, DMA_PACK_ALIGN_LSB|DMA_DITHER_EN|DMA_PACK_PATTERN_RGB|
               DMA_OUT_SEL_LCDC|DMA_IBUF_FORMAT_XRGB8888|
               DMA_DSTC0G_8BITS|DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS);
-
-  //PPP_PACK_PATTERN_MDP_BGRA_8888 weird but ok colors
-  //DMA_PACK_PATTERN_BGRA doesn't work
 
   //Ensure all transfers finished
   ArmInstructionSynchronizationBarrier();

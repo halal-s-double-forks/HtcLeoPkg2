@@ -38,44 +38,21 @@ extern UINT64  mSystemMemoryEnd;
 #define MSM_MDP_BASE1 	0xAA200000
 #define LCDC_BASE     	0xE0000
 
-//#define BIT(x)  (1<<(x))
-
-// from https://gitlab.utc.fr/mi11/linux/linux-raspberrypi/-/blob/a26c4d1f1428082f6aba79207535527c91115c76/include/linux/msm_mdp.h
-enum {
-	MDP_RGB_565,		/* RGB 565 planar */
-	MDP_XRGB_8888,		/* RGB 888 padded */
-	MDP_Y_CBCR_H2V2,	/* Y and CbCr, pseudo planar w/ Cb is in MSB */
-	MDP_ARGB_8888,		/* ARGB 888 */
-	MDP_RGB_888,		/* RGB 888 planar */
-	MDP_Y_CRCB_H2V2,	/* Y and CrCb, pseudo planar w/ Cr is in MSB */
-	MDP_YCRYCB_H2V1,	/* YCrYCb interleave */
-	MDP_Y_CRCB_H2V1,	/* Y and CrCb, pseduo planar w/ Cr is in MSB */
-	MDP_Y_CBCR_H2V1,	/* Y and CrCb, pseduo planar w/ Cr is in MSB */
-	MDP_RGBA_8888,		/* ARGB 888 */
-	MDP_BGRA_8888,		/* ABGR 888 */
-	MDP_RGBX_8888,		/* RGBX 888 */
-	MDP_IMGTYPE_LIMIT	/* Non valid image type after this enum */
-};
-
-
 /* MDP 3.1 */
-
-#define DMA_DSTC0G_8BITS (BIT(1)|BIT(0))
-#define DMA_DSTC1B_8BITS (BIT(3)|BIT(2))
-#define DMA_DSTC2R_8BITS (BIT(5)|BIT(4))
-#define DMA_DSTC3A_8BITS (BIT(7)|BIT(6))
-//#define DMA_DSTC0G_8BITS (3<<0)
-//#define DMA_DSTC1B_8BITS (3<<2)
-//#define DMA_DSTC2R_8BITS (3<<4)
+#define DMA_DSTC0G_8BITS (3<<0)
+#define DMA_DSTC1B_8BITS (3<<2)
+#define DMA_DSTC2R_8BITS (3<<4)
 
 #define CLR_G 0x0
 #define CLR_B 0x1
 #define CLR_R 0x2
 #define CLR_ALPHA 0x3
+
 #define MDP_GET_PACK_PATTERN(a,x,y,z,bit) (((a)<<(bit*3))|((x)<<(bit*2))|((y)<<bit)|(z))
-#define DMA_PACK_TIGHT                      BIT(6)
+#define DMA_PACK_TIGHT                      (1 << 6)
 #define DMA_PACK_LOOSE                      0
 #define DMA_PACK_ALIGN_LSB                  0
+
 #define DMA_PACK_PATTERN_RGB				\
         (MDP_GET_PACK_PATTERN(0,CLR_R,CLR_G,CLR_B, 2)<<8)
 #define DMA_PACK_PATTERN_BGR \
@@ -83,20 +60,19 @@ enum {
 /* from https://nv-tegra-prod.hwinf-scm-aws.nvidia.com/r/plugins/gitiles/linux-3.10/+/a724eada8c2a7b62463b73ccf73fd0bb6e928aeb/drivers/video/msm/mdp_hw.h */
 #define PPP_PACK_PATTERN_MDP_RGBA_8888 \
 	      MDP_GET_PACK_PATTERN(CLR_ALPHA, CLR_B, CLR_G, CLR_R, 8)
-
 #define PPP_PACK_PATTERN_MDP_BGRA_8888 \
-	MDP_GET_PACK_PATTERN(CLR_ALPHA, CLR_R, CLR_G, CLR_B, 8)
+	      MDP_GET_PACK_PATTERN(CLR_ALPHA, CLR_R, CLR_G, CLR_B, 8)
 /* end */
 
 #define DMA_PACK_PATTERN_BGRA \
         (MDP_GET_PACK_PATTERN(CLR_ALPHA, CLR_B, CLR_G, CLR_R, 2)<<8)
 
-#define DMA_DITHER_EN                         BIT(24)
-#define DMA_OUT_SEL_LCDC                      BIT(20)
+#define DMA_DITHER_EN                         (1 << 24)
+#define DMA_OUT_SEL_LCDC                      (1 << 20)
 #define DMA_IBUF_FORMAT_RGB888			          (0 << 25)
 #define DMA_IBUF_FORMAT_RGB565			          (1 << 25)
 #define DMA_IBUF_FORMAT_XRGB8888		          (2 << 25)
-#define DMA_IBUF_FORMAT_xRGB8888_OR_ARGB8888  BIT(26)
+#define DMA_IBUF_FORMAT_xRGB8888_OR_ARGB8888  (1 << 26)
 #define DMA_IBUF_FORMAT_MASK			            (3 << 25)
 
 /* MDP 3.1 end*/

@@ -236,12 +236,12 @@ void LcdcInit(void)
    MmioWrite32(MDP_LCDC_HSYNC_SKEW,         0x00000000);
    MmioWrite32(MDP_LCDC_CTL_POLARITY,       0x00000000);*/
 
-   // Format (32bpp RGB)
+   // Format
   dma_cfg |= (DMA_PACK_ALIGN_MSB |
-		   DMA_PACK_PATTERN_BGR |
+		   DMA_PACK_PATTERN_RGB |
 		   DMA_DITHER_EN);
 	dma_cfg |= DMA_OUT_SEL_LCDC; // Select the DMA channel for LCDC
-	dma_cfg |= DMA_IBUF_FORMAT_xRGB8888_OR_ARGB8888; //32BPP RGB
+	dma_cfg |= DMA_IBUF_FORMAT_xRGB8888_OR_ARGB8888; // 32bpp ARGB
 	//dma_cfg &= ~DMA_DITHER_EN; // solve color banding isue -- marc1706
 	dma_cfg &= ~DMA_DST_BITS_MASK;
   dma_cfg |= DMA_DSTC0G_8BITS|DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS;
@@ -249,7 +249,7 @@ void LcdcInit(void)
   MmioWrite32(MDP_DMA_P_CONFIG, dma_cfg);
   MmioWrite32(MDP_DMA_P_SIZE,          ((height<<16) | width));
   MmioWrite32(MDP_DMA_P_IBUF_ADDR,     LCDC_FB_ADDR);
-  MmioWrite32(MDP_DMA_P_IBUF_Y_STRIDE, width * 4);
+  MmioWrite32(MDP_DMA_P_IBUF_Y_STRIDE, width * FB_BYTES_PER_PIXEL);
   MmioWrite32(MDP_DMA_P_OUT_XY,        0x0);         // This must be 0
 
    // Enable

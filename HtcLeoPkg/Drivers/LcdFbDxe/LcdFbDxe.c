@@ -20,18 +20,7 @@
 #include "LcdFbDxe.h"
 
 /// Defines
-/*
- * Convert enum video_log2_bpp to bytes and bits. Note we omit the outer
- * brackets to allow multiplication by fractional pixels.
- */
-#define VNBYTES(bpix) (1 << (bpix)) / 8
-#define VNBITS(bpix) (1 << (bpix))
-
-#define POS_TO_FB(posX, posY)                                                  \
-  ((UINT8                                                                      \
-        *)((UINTN)This->Mode->FrameBufferBase + (posY)*This->Mode->Info->PixelsPerScanLine * FB_BYTES_PER_PIXEL + (posX)*FB_BYTES_PER_PIXEL))
-
-#define FB_BITS_PER_PIXEL (24)
+#define FB_BITS_PER_PIXEL (LCD_BPP)
 #define FB_BYTES_PER_PIXEL (FB_BITS_PER_PIXEL / 8)
 #define DISPLAYDXE_PHYSICALADDRESS32(_x_) (UINTN)((_x_)&0xFFFFFFFF)
 
@@ -264,6 +253,9 @@ LcdFbDxeInitialize(
   // Init/reinit LCD
   LcdcInit();
 
+  // Enable
+  MmioWrite32(MDP_LCDC_EN, 0x00000001);
+
   /* Retrieve frame buffer from pre-SEC bootloader */
   DEBUG(
       (EFI_D_INFO,
@@ -313,7 +305,7 @@ LcdFbDxeInitialize(
   mDisplay.Mode->Info->VerticalResolution   = MipiFrameBufferHeight;
 
   /* SimpleFB runs on r8g8b8 (VIDEO_BPP24) for HTC HD2 */
-  UINT32               LineLength = MipiFrameBufferWidth * (LCD_BPP / 8);//VNBYTES(VIDEO_BPP32);
+  UINT32               LineLength = MipiFrameBufferWidth * FB_BYTES_PER_PIXEL;
   UINT32               FrameBufferSize    = LineLength * MipiFrameBufferHeight;
   EFI_PHYSICAL_ADDRESS FrameBufferAddress = MipiFrameBufferAddr;
 

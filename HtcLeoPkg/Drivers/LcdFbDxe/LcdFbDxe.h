@@ -29,3 +29,5 @@
 #   define LCD_MD_VAL_MHZ	0x0005FFCF //40 Mhz
 #   define LCD_NS_VAL_MHZ	0xFFD41B49 //40 Mhz
 #   define LCD_CLK_PCOM_MHZ	40000000
+
+#define USE_PROC_COMM

@@ -21,6 +21,13 @@
 #include "LcdFbDxe.h"
 
 /// Defines
+/*
+ * Convert enum video_log2_bpp to bytes and bits. Note we omit the outer
+ * brackets to allow multiplication by fractional pixels.
+ */
+#define VNBYTES(bpix) (1 << (bpix)) / 8
+#define VNBITS(bpix) (1 << (bpix))
+
 #define FB_BITS_PER_PIXEL (LCD_BPP)
 #define FB_BYTES_PER_PIXEL (FB_BITS_PER_PIXEL / 8)
 #define DISPLAYDXE_PHYSICALADDRESS32(_x_) (UINTN)((_x_)&0xFFFFFFFF)
@@ -229,53 +236,25 @@ void LcdcInit(void)
    MmioWrite32(MDP_LCDC_HSYNC_SKEW,         0x00000000);
    MmioWrite32(MDP_LCDC_CTL_POLARITY,       0x00000000);*/
 
-   // Select the DMA channel for LCDC
-   // Format (24bpp RGB)
-  /*MmioWrite32(MDP_DMA_P_CONFIG, DMA_PACK_ALIGN_LSB|DMA_DITHER_EN|DMA_PACK_PATTERN_RGB|
-              DMA_OUT_SEL_LCDC|DMA_IBUF_FORMAT_RGB888|
-              DMA_DSTC0G_8BITS|DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS);*/
-
+   // Format (32bpp RGB)
   dma_cfg |= (DMA_PACK_ALIGN_MSB |
-		   DMA_PACK_PATTERN_RGB |
+		   DMA_PACK_PATTERN_BGR |
 		   DMA_DITHER_EN);
-	dma_cfg |= DMA_OUT_SEL_LCDC;
-	dma_cfg |= DMA_IBUF_FORMAT_RGB888;
+	dma_cfg |= DMA_OUT_SEL_LCDC; // Select the DMA channel for LCDC
+	dma_cfg |= DMA_IBUF_FORMAT_xRGB8888_OR_ARGB8888; //32BPP RGB
 	//dma_cfg &= ~DMA_DITHER_EN; // solve color banding isue -- marc1706
 	dma_cfg &= ~DMA_DST_BITS_MASK;
   dma_cfg |= DMA_DSTC0G_8BITS|DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS;
 
+  MmioWrite32(MDP_DMA_P_CONFIG, dma_cfg);
   MmioWrite32(MDP_DMA_P_SIZE,          ((height<<16) | width));
   MmioWrite32(MDP_DMA_P_IBUF_ADDR,     LCDC_FB_ADDR);
-  MmioWrite32(MDP_DMA_P_IBUF_Y_STRIDE, width * FB_BYTES_PER_PIXEL);
+  MmioWrite32(MDP_DMA_P_IBUF_Y_STRIDE, width * 4);
   MmioWrite32(MDP_DMA_P_OUT_XY,        0x0);         // This must be 0
 
    // Enable
   MmioWrite32(MDP_LCDC_EN, 1);
 }
-
-/*
- *  LCDC init routine (stripped, working)
- *
-void LcdcInit(void)
-{
-  unsigned int width = LCDC_vl_col;
-  unsigned int height = LCDC_vl_row;
-  
-  // Stop any previous transfers
-  MmioWrite32(MDP_LCDC_EN, 0x0);
-  
-  // Select the DMA channel for LCDC and set format (24bpp RGB)
-  MmioWrite32(MDP_DMA_P_CONFIG, DMA_PACK_ALIGN_LSB|DMA_DITHER_EN|DMA_PACK_PATTERN_RGB|
-              DMA_OUT_SEL_LCDC|DMA_IBUF_FORMAT_RGB888|
-              DMA_DSTC0G_8BITS|DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS);
-  MmioWrite32(MDP_DMA_P_SIZE,          ((height<<16) | width));
-  MmioWrite32(MDP_DMA_P_IBUF_ADDR,     LCDC_FB_ADDR);
-  MmioWrite32(MDP_DMA_P_IBUF_Y_STRIDE, width * 3);
-  MmioWrite32(MDP_DMA_P_OUT_XY,        0x0);         // This must be 0
-
-  // Enable
-  MmioWrite32(MDP_LCDC_EN, 1);
-}*/
 
 
 EFI_STATUS
@@ -342,8 +321,8 @@ LcdFbDxeInitialize(
   mDisplay.Mode->Info->HorizontalResolution = MipiFrameBufferWidth;
   mDisplay.Mode->Info->VerticalResolution   = MipiFrameBufferHeight;
 
-  /* SimpleFB runs on r8g8b8 (VIDEO_BPP24) for HTC HD2 */
-  UINT32               LineLength = MipiFrameBufferWidth * FB_BYTES_PER_PIXEL;
+  /* SimpleFB runs on a8r8g8b8 (VIDEO_BPP32) for HTC HD2 */
+  UINT32               LineLength = MipiFrameBufferWidth * VNBYTES(VIDEO_BPP32);
   UINT32               FrameBufferSize    = LineLength * MipiFrameBufferHeight;
   EFI_PHYSICAL_ADDRESS FrameBufferAddress = MipiFrameBufferAddr;
 

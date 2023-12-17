@@ -150,6 +150,30 @@ DisplayBlt(
   return RETURN_ERROR(Status) ? EFI_INVALID_PARAMETER : EFI_SUCCESS;
 }
 
+VOID
+TestScreen(
+  IN  UINTN   BgColor
+)
+{
+  // Code from FramebufferSerialPortLib
+	char* Pixels = (void*)LCDC_FB_ADDR;
+
+	// Set to black color.
+	for (UINTN i = 0; i < LCDC_vl_row; i++)
+	{
+		for (UINTN j = 0; j < LCDC_vl_col; j++)
+		{
+			// Set pixel bit
+			for (UINTN p = 0; p < (LCD_BPP / 8); p++)
+			{
+				*Pixels = (unsigned char)BgColor;
+				BgColor = BgColor >> 8;
+				Pixels++;
+			}
+		}
+	}
+}
+
 /*
  *  LCDC init routine, called by the lcd_ctrl_init
  */
@@ -250,11 +274,15 @@ LcdFbDxeInitialize(
   EFI_STATUS Status             = EFI_SUCCESS;
   EFI_HANDLE hUEFIDisplayHandle = NULL;
 
+  TestScreen(0xffffffff);//white
+
   // Init/reinit LCD
   LcdcInit();
 
   // Enable
   MmioWrite32(MDP_LCDC_EN, 0x00000001);
+
+  TestScreen(0xff0000ff);//blue
 
   /* Retrieve frame buffer from pre-SEC bootloader */
   DEBUG(

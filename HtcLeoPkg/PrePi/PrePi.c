@@ -55,34 +55,6 @@ PaintScreen(
 }
 
 VOID
-ReconfigFb()
-{
-  // Paint the FB area to black
-  PaintScreen(FB_BGRA8888_BLACK);
-
-  // Move the FB if needed
-  if (FbAddr != 0x2A00000) {
-    MmioWrite32(MDP_DMA_P_BUF_ADDR, FbAddr);
-  }
-
-  // Stride
-	MmioWrite32(MDP_DMA_P_BUF_Y_STRIDE, Width * Bpp / 8);
-  
-  // Format (32bpp ARGB)
-  MmioWrite32(MDP_DMA_P_CONFIG, DMA_PACK_ALIGN_LSB|DMA_DITHER_EN|DMA_PACK_PATTERN_RGB|
-              DMA_OUT_SEL_LCDC|DMA_IBUF_FORMAT_XRGB8888|
-              DMA_DSTC0G_8BITS|DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS);
-
-  MmioWrite32(MSM_MDP_BASE1 + LCDC_BASE + 0x0, 1); //flush?
-
-  //Ensure all transfers finished
-  ArmInstructionSynchronizationBarrier();
-  ArmDataMemoryBarrier();
-
-  MicroSecondDelay(10);
-}
-
-VOID
 EnableCounter()
 {
   /* enable cp10 and cp11 */
@@ -128,8 +100,7 @@ PrePiMain (
   // Initialize the architecture specific bits
   ArchInitialize ();
 
-  // Reconfigure the framebuffer to 32bpp BGRA8888
-  ReconfigFb();
+  PaintScreen(FB_BGRA8888_BLACK);
 
   // Enable the counter (code from PrimeG2Pkg)
   EnableCounter();

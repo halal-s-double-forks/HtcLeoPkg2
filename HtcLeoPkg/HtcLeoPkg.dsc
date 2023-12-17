@@ -155,7 +155,7 @@
   #
   gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvModeEnable|TRUE
 
-  gHtcLeoPkgTokenSpaceGuid.PcdMipiFrameBufferAddress|0x20000000
+  gHtcLeoPkgTokenSpaceGuid.PcdMipiFrameBufferAddress|0x02A00000
   gHtcLeoPkgTokenSpaceGuid.PcdMipiFrameBufferWidth|480
   gHtcLeoPkgTokenSpaceGuid.PcdMipiFrameBufferHeight|800
 
@@ -244,7 +244,8 @@
   # QSD8250 necessary driver execution environment
   #
   HtcLeoPkg/Drivers/HtcLeoPkgDxe/HtcLeoPkgDxe.inf
-  HtcLeoPkg/Drivers/SimpleFbDxe/SimpleFbDxe.inf
+  #HtcLeoPkg/Drivers/SimpleFbDxe/SimpleFbDxe.inf
+  HtcLeoPkg/Drivers/LcdFbDxe/LcdFbDxe.inf
   HtcLeoPkg/Drivers/LogoDxe/LogoDxe.inf
 
   #

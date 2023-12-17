@@ -137,7 +137,8 @@ APRIORI DXE {
   INF EmbeddedPkg/Drivers/VirtualKeyboardDxe/VirtualKeyboardDxe.inf
 
   INF HtcLeoPkg/Drivers/HtcLeoPkgDxe/HtcLeoPkgDxe.inf
-  INF HtcLeoPkg/Drivers/SimpleFbDxe/SimpleFbDxe.inf
+  #INF HtcLeoPkg/Drivers/SimpleFbDxe/SimpleFbDxe.inf
+  INF HtcLeoPkg/Drivers/LcdFbDxe/LcdFbDxe.inf
 
   #
   # USB Host Support

@@ -212,8 +212,9 @@ void LcdcInit(void)
    // Stop any previous transfers
    MmioWrite32(MDP_LCDC_EN, 0x0);
 
-   // Write the registers
-   /*MmioWrite32(MDP_LCDC_HSYNC_CTL,          ((hsync_period << 16) | hsync_width));
+   // Write the registers (disabled for now, breaks display)
+   /*
+   MmioWrite32(MDP_LCDC_HSYNC_CTL,          ((hsync_period << 16) | hsync_width));
    MmioWrite32(MDP_LCDC_VSYNC_PERIOD,       (vsync_period * hsync_period));
    MmioWrite32(MDP_LCDC_VSYNC_PULSE_WIDTH,  vsync_width);
    MmioWrite32(MDP_LCDC_DISPLAY_HCTL,       (((hsync_period - LCDC_vl_hfp - 1) << 16) | LCDC_vl_hbp));
@@ -243,10 +244,10 @@ void LcdcInit(void)
 	dma_cfg &= ~DMA_DST_BITS_MASK;
   dma_cfg |= DMA_DSTC0G_8BITS|DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS;
 
-   MmioWrite32(MDP_DMA_P_SIZE,          ((height<<16) | width));
-   MmioWrite32(MDP_DMA_P_IBUF_ADDR,     LCDC_FB_ADDR);
-   MmioWrite32(MDP_DMA_P_IBUF_Y_STRIDE, width*3);
-   MmioWrite32(MDP_DMA_P_OUT_XY,        0x0);         // This must be 0
+  MmioWrite32(MDP_DMA_P_SIZE,          ((height<<16) | width));
+  MmioWrite32(MDP_DMA_P_IBUF_ADDR,     LCDC_FB_ADDR);
+  MmioWrite32(MDP_DMA_P_IBUF_Y_STRIDE, width * FB_BYTES_PER_PIXEL);
+  MmioWrite32(MDP_DMA_P_OUT_XY,        0x0);         // This must be 0
 
    // Enable
   MmioWrite32(MDP_LCDC_EN, 1);

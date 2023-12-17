@@ -165,38 +165,25 @@ DisplayBlt(
  */
 void LcdcInit(void)
 {
-   unsigned int X = 0;
-   unsigned int Y = 0;
-   unsigned int width = LCDC_vl_col;
-   unsigned int height = LCDC_vl_row;
+  //unsigned int X = 0;
+  //unsigned int Y = 0;
+  unsigned int width = LCDC_vl_col;
+  unsigned int height = LCDC_vl_row;
 
-   int hsync_period;
-   int vsync_period;
+  /*int hsync_period = LCDC_vl_sync_width + LCDC_vl_hfp + LCDC_vl_hbp;
+  int vsync_period = LCDC_vl_sync_height + LCDC_vl_vfp + LCDC_vl_vbp;
+  int hsync_width  = LCDC_vl_hsync_width;
+  int vsync_width  = LCDC_vl_vsync_width * hsync_period;
+  int vsync_starty = LCDC_vl_vbp * hsync_period;
+  int vsync_endy   = (((LCDC_vl_vbp + LCDC_vl_sync_height) * hsync_period) - 1);
 
-   int hactive_start_x;
-   int hactive_end_x;
-   int vactive_start_y;
-   int vactive_end_y;
+  // Active area of display
+  int hactive_start_x = X + LCDC_vl_hbp;
+  int hactive_end_x   = hactive_start_x + width - 1;
+  int vactive_start_y = (Y + LCDC_vl_vbp) * hsync_period;
+  int vactive_end_y   = vactive_start_y + (height * hsync_period) - 1;*/
 
-   int hsync_width;
-   int vsync_width;
-   int vsync_starty;
-   int vsync_endy;
-
-   UINT32 dma_cfg = 0;
-
-   hsync_period = LCDC_vl_sync_width + LCDC_vl_hfp + LCDC_vl_hbp;
-   vsync_period = LCDC_vl_sync_height + LCDC_vl_vfp + LCDC_vl_vbp;
-   hsync_width  = LCDC_vl_hsync_width;
-   vsync_width  = LCDC_vl_vsync_width * hsync_period;
-   vsync_starty = LCDC_vl_vbp * hsync_period;
-   vsync_endy   = (((LCDC_vl_vbp + LCDC_vl_sync_height) * hsync_period) - 1);
-
-   // Active area of display
-   hactive_start_x = X + LCDC_vl_hbp;
-   hactive_end_x   = hactive_start_x + width - 1;
-   vactive_start_y = (Y + LCDC_vl_vbp) * hsync_period;
-   vactive_end_y   = vactive_start_y + (height * hsync_period) - 1;
+  UINT32 dma_cfg = 0;
 
   /*
    * clk_enable(lcdc->mdp_clk);
@@ -208,9 +195,6 @@ void LcdcInit(void)
   pcom_enable_lcdc_clk();
   pcom_enable_lcdc_pad_clk();
   pcom_set_lcdc_clk(LCD_CLK_PCOM_MHZ);
-  //pcom_enable_lcdc_pad_clk();
-  //pcom_enable_lcdc_clk();
-
 #else
    MmioWrite32(LCD_NS_REG, LCD_NS_VAL_MHZ);
    MmioWrite32(LCD_MD_REG, LCD_MD_VAL_MHZ);
@@ -246,7 +230,7 @@ void LcdcInit(void)
 	dma_cfg &= ~DMA_DST_BITS_MASK;
   dma_cfg |= DMA_DSTC0G_8BITS|DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS;
 
-  MmioWrite32(MDP_DMA_P_CONFIG, dma_cfg);
+  MmioWrite32(MDP_DMA_P_CONFIG,        dma_cfg);
   MmioWrite32(MDP_DMA_P_SIZE,          ((height<<16) | width));
   MmioWrite32(MDP_DMA_P_IBUF_ADDR,     LCDC_FB_ADDR);
   MmioWrite32(MDP_DMA_P_IBUF_Y_STRIDE, width * FB_BYTES_PER_PIXEL);
@@ -347,8 +331,6 @@ LcdFbDxeInitialize(
   }
 
   ASSERT_EFI_ERROR(Status);
-  /* Causes gcc to error with "-Werror=int-to-pointer-cast" */
-   //ZeroMem(LCDC_FB_ADDR, FrameBufferSize); 
 
   /* Register handle */
   Status = gBS->InstallMultipleProtocolInterfaces(

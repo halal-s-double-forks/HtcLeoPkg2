@@ -176,18 +176,13 @@ TestScreen(
 
 /*
  *  LCDC init routine, called by the lcd_ctrl_init
- */
+
 void LcdcInit(void)
 {
    unsigned int X = 0;
    unsigned int Y = 0;
    unsigned int width = LCDC_vl_col;
    unsigned int height = LCDC_vl_row;
-
-   /* Accesses LCDC_FB_ADDR, set to LCDC_FB_ADDR in the board file
-    * since the value is needed really early in drv_lcd_init()
-    */
-   //LCDC_FB_ADDR = (unsigned long) LCDC_FB_ADDR;
 
    int hsync_period;
    int vsync_period;
@@ -216,23 +211,11 @@ void LcdcInit(void)
    vactive_end_y   = vactive_start_y + (height * hsync_period) - 1;
 
 #ifdef USE_PROC_COMM
-   /*debug("Before:: LCDC_HZ=%ul\n",pcom_get_lcdc_clk());
-   debug("LCD_NS_REG=0x%08X\n",MmioRead32(LCD_NS_REG));
-   debug("LCD_MD_REG=0x%08X\n",MmioRead32(LCD_MD_REG));*/
    pcom_set_lcdc_clk(LCD_CLK_PCOM_MHZ);
-   /*debug("LCD_NS_REG=0x%08X\n",MmioRead32(LCD_NS_REG));
-   debug("LCD_MD_REG=0x%08X\n",MmioRead32(LCD_MD_REG));*/
    pcom_enable_lcdc_pad_clk();
-   /*debug("LCD_NS_REG=0x%08X\n",MmioRead32(LCD_NS_REG));
-   debug("LCD_MD_REG=0x%08X\n",MmioRead32(LCD_MD_REG));*/
    pcom_enable_lcdc_clk();
-   /*debug("LCD_NS_REG=0x%08X\n",MmioRead32(LCD_NS_REG));
-   debug("LCD_MD_REG=0x%08X\n",MmioRead32(LCD_MD_REG));
-   debug("After:: LCDC_HZ=%ul\n",pcom_get_lcdc_clk());*/
 
-#else /* USE_PROC_COMM not defined */
-   //debug("LCD_NS_REG=0x%08X\n",MmioRead32(LCD_NS_REG));
-   //debug("LCD_MD_REG=0x%08X\n",MmioRead32(LCD_MD_REG));
+#else
    MmioWrite32(LCD_NS_REG, LCD_NS_VAL_MHZ);
    MmioWrite32(LCD_MD_REG, LCD_MD_VAL_MHZ);
 #endif
@@ -258,12 +241,38 @@ void LcdcInit(void)
 
    // Select the DMA channel for LCDC
    // For WVGA LCDC
-   MmioWrite32(MDP_DMA_P_CONFIG,        0x0010213F);  // 0x00100000 selects LCDC, must use MDP_DMA_P
+   //(non-work) MmioWrite32(MDP_DMA_P_CONFIG,        0x0010213F);  // 0x00100000 selects LCDC, must use MDP_DMA_P
+   // Format (24bpp RGB)
+  MmioWrite32(MDP_DMA_P_CONFIG, DMA_PACK_ALIGN_LSB|DMA_DITHER_EN|DMA_PACK_PATTERN_RGB|
+              DMA_OUT_SEL_LCDC|DMA_IBUF_FORMAT_RGB888|
+              DMA_DSTC0G_8BITS|DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS);
    MmioWrite32(MDP_DMA_P_SIZE,          ((height<<16) | width));
    MmioWrite32(MDP_DMA_P_IBUF_ADDR,     LCDC_FB_ADDR);
    MmioWrite32(MDP_DMA_P_IBUF_Y_STRIDE, width*3);
    MmioWrite32(MDP_DMA_P_OUT_XY,        0x0);         // This must be 0
+}*/
+
+/*
+ *  LCDC init routine, called by the lcd_ctrl_init
+ */
+void LcdcInit(void)
+{
+  // Stop any previous transfers
+  MmioWrite32(MDP_LCDC_EN, 0x0);
+  
+  // Format (24bpp RGB)
+  MmioWrite32(MDP_DMA_P_CONFIG, DMA_PACK_ALIGN_LSB|DMA_DITHER_EN|DMA_PACK_PATTERN_RGB|
+              DMA_OUT_SEL_LCDC|DMA_IBUF_FORMAT_RGB888|
+              DMA_DSTC0G_8BITS|DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS);
+  //MmioWrite32(MDP_DMA_P_SIZE,          ((height<<16) | width));
+  MmioWrite32(MDP_DMA_P_IBUF_ADDR,     LCDC_FB_ADDR);
+  MmioWrite32(MDP_DMA_P_IBUF_Y_STRIDE, 480 * 4);
+  MmioWrite32(MDP_DMA_P_OUT_XY,        0x0);         // This must be 0
+
+  // Enable
+  MmioWrite32(MDP_LCDC_EN, 1);
 }
+
 
 EFI_STATUS
 EFIAPI

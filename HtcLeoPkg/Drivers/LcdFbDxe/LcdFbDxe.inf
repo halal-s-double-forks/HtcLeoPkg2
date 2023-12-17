@@ -36,6 +36,7 @@
 [Protocols]
   gEfiGraphicsOutputProtocolGuid ## PRODUCES
   gEfiCpuArchProtocolGuid
+  gEmbeddedClockProtocolGuid
 
 [FixedPcd]
   gHtcLeoPkgTokenSpaceGuid.PcdMipiFrameBufferAddress

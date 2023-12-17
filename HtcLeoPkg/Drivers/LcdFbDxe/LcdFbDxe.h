@@ -30,6 +30,7 @@
 #   define LCD_NS_VAL_MHZ	0xFFD41B49 //40 Mhz
 #   define LCD_CLK_PCOM_MHZ	40000000
 
+// PCOM
 #define USE_PROC_COMM
 
 /* MDP-related defines */
@@ -50,6 +51,7 @@
 #define DMA_PACK_TIGHT                      (1 << 6)
 #define DMA_PACK_LOOSE                      0
 #define DMA_PACK_ALIGN_LSB                  0
+#define DMA_PACK_ALIGN_MSB (1<<7)
 
 #define DMA_PACK_PATTERN_RGB				\
         (MDP_GET_PACK_PATTERN(0,CLR_R,CLR_G,CLR_B, 2)<<8)
@@ -66,3 +68,4 @@
 #define DMA_IBUF_FORMAT_XRGB8888		          (2 << 25)
 #define DMA_IBUF_FORMAT_xRGB8888_OR_ARGB8888  (1 << 26)
 #define DMA_IBUF_FORMAT_MASK			            (3 << 25)
+#define DMA_DST_BITS_MASK 0x3F

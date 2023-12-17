@@ -16,6 +16,7 @@
 #include <Library/pcom_clients.h>
 
 #include <Protocol/GraphicsOutput.h>
+#include <Protocol/EmbeddedClock.h>
 
 #include "LcdFbDxe.h"
 
@@ -29,6 +30,8 @@
 #define DISPLAYDXE_BLUE_MASK 0x0000FF
 #define DISPLAYDXE_ALPHA_MASK 0x000000
 
+// Cached copy of the Embedded Clock protocol instance
+EMBEDDED_CLOCK_PROTOCOL  *gClock = NULL;
 
 /*
  * Bits per pixel selector. Each value n is such that the bits-per-pixel is
@@ -150,33 +153,9 @@ DisplayBlt(
   return RETURN_ERROR(Status) ? EFI_INVALID_PARAMETER : EFI_SUCCESS;
 }
 
-VOID
-TestScreen(
-  IN  UINTN   BgColor
-)
-{
-  // Code from FramebufferSerialPortLib
-	char* Pixels = (void*)LCDC_FB_ADDR;
-
-	// Set to black color.
-	for (UINTN i = 0; i < LCDC_vl_row; i++)
-	{
-		for (UINTN j = 0; j < LCDC_vl_col; j++)
-		{
-			// Set pixel bit
-			for (UINTN p = 0; p < (LCD_BPP / 8); p++)
-			{
-				*Pixels = (unsigned char)BgColor;
-				BgColor = BgColor >> 8;
-				Pixels++;
-			}
-		}
-	}
-}
-
 /*
- *  LCDC init routine, called by the lcd_ctrl_init
-
+ *  LCDC init routine
+ */
 void LcdcInit(void)
 {
    unsigned int X = 0;
@@ -197,6 +176,8 @@ void LcdcInit(void)
    int vsync_starty;
    int vsync_endy;
 
+   UINT32 dma_cfg = 0;
+
    hsync_period = LCDC_vl_sync_width + LCDC_vl_hfp + LCDC_vl_hbp;
    vsync_period = LCDC_vl_sync_height + LCDC_vl_vfp + LCDC_vl_vbp;
    hsync_width  = LCDC_vl_hsync_width;
@@ -210,10 +191,18 @@ void LcdcInit(void)
    vactive_start_y = (Y + LCDC_vl_vbp) * hsync_period;
    vactive_end_y   = vactive_start_y + (height * hsync_period) - 1;
 
+  /*
+   * clk_enable(lcdc->mdp_clk);
+	 * clk_enable(lcdc->pclk);
+	 * clk_enable(lcdc->pad_pclk);
+  */
+  gClock->ClkEnable(14);//MDP_CLK);
 #ifdef USE_PROC_COMM
-   pcom_set_lcdc_clk(LCD_CLK_PCOM_MHZ);
-   pcom_enable_lcdc_pad_clk();
-   pcom_enable_lcdc_clk();
+  pcom_enable_lcdc_clk();
+  pcom_enable_lcdc_pad_clk();
+  pcom_set_lcdc_clk(LCD_CLK_PCOM_MHZ);
+  //pcom_enable_lcdc_pad_clk();
+  //pcom_enable_lcdc_clk();
 
 #else
    MmioWrite32(LCD_NS_REG, LCD_NS_VAL_MHZ);
@@ -224,7 +213,7 @@ void LcdcInit(void)
    MmioWrite32(MDP_LCDC_EN, 0x0);
 
    // Write the registers
-   MmioWrite32(MDP_LCDC_HSYNC_CTL,          ((hsync_period << 16) | hsync_width));
+   /*MmioWrite32(MDP_LCDC_HSYNC_CTL,          ((hsync_period << 16) | hsync_width));
    MmioWrite32(MDP_LCDC_VSYNC_PERIOD,       (vsync_period * hsync_period));
    MmioWrite32(MDP_LCDC_VSYNC_PULSE_WIDTH,  vsync_width);
    MmioWrite32(MDP_LCDC_DISPLAY_HCTL,       (((hsync_period - LCDC_vl_hfp - 1) << 16) | LCDC_vl_hbp));
@@ -237,41 +226,55 @@ void LcdcInit(void)
    MmioWrite32(MDP_LCDC_BORDER_CLR,         0x00000000);
    MmioWrite32(MDP_LCDC_UNDERFLOW_CTL,      0x80000000);
    MmioWrite32(MDP_LCDC_HSYNC_SKEW,         0x00000000);
-   MmioWrite32(MDP_LCDC_CTL_POLARITY,       0x00000000);
+   MmioWrite32(MDP_LCDC_CTL_POLARITY,       0x00000000);*/
 
    // Select the DMA channel for LCDC
-   // For WVGA LCDC
-   //(non-work) MmioWrite32(MDP_DMA_P_CONFIG,        0x0010213F);  // 0x00100000 selects LCDC, must use MDP_DMA_P
    // Format (24bpp RGB)
-  MmioWrite32(MDP_DMA_P_CONFIG, DMA_PACK_ALIGN_LSB|DMA_DITHER_EN|DMA_PACK_PATTERN_RGB|
+  /*MmioWrite32(MDP_DMA_P_CONFIG, DMA_PACK_ALIGN_LSB|DMA_DITHER_EN|DMA_PACK_PATTERN_RGB|
               DMA_OUT_SEL_LCDC|DMA_IBUF_FORMAT_RGB888|
-              DMA_DSTC0G_8BITS|DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS);
+              DMA_DSTC0G_8BITS|DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS);*/
+
+  dma_cfg |= (DMA_PACK_ALIGN_MSB |
+		   DMA_PACK_PATTERN_RGB |
+		   DMA_DITHER_EN);
+	dma_cfg |= DMA_OUT_SEL_LCDC;
+	dma_cfg |= DMA_IBUF_FORMAT_RGB888;
+	//dma_cfg &= ~DMA_DITHER_EN; // solve color banding isue -- marc1706
+	dma_cfg &= ~DMA_DST_BITS_MASK;
+  dma_cfg |= DMA_DSTC0G_8BITS|DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS;
+
    MmioWrite32(MDP_DMA_P_SIZE,          ((height<<16) | width));
    MmioWrite32(MDP_DMA_P_IBUF_ADDR,     LCDC_FB_ADDR);
    MmioWrite32(MDP_DMA_P_IBUF_Y_STRIDE, width*3);
    MmioWrite32(MDP_DMA_P_OUT_XY,        0x0);         // This must be 0
-}*/
+
+   // Enable
+  MmioWrite32(MDP_LCDC_EN, 1);
+}
 
 /*
- *  LCDC init routine, called by the lcd_ctrl_init
- */
+ *  LCDC init routine (stripped, working)
+ *
 void LcdcInit(void)
 {
+  unsigned int width = LCDC_vl_col;
+  unsigned int height = LCDC_vl_row;
+  
   // Stop any previous transfers
   MmioWrite32(MDP_LCDC_EN, 0x0);
   
-  // Format (24bpp RGB)
+  // Select the DMA channel for LCDC and set format (24bpp RGB)
   MmioWrite32(MDP_DMA_P_CONFIG, DMA_PACK_ALIGN_LSB|DMA_DITHER_EN|DMA_PACK_PATTERN_RGB|
               DMA_OUT_SEL_LCDC|DMA_IBUF_FORMAT_RGB888|
               DMA_DSTC0G_8BITS|DMA_DSTC1B_8BITS|DMA_DSTC2R_8BITS);
-  //MmioWrite32(MDP_DMA_P_SIZE,          ((height<<16) | width));
+  MmioWrite32(MDP_DMA_P_SIZE,          ((height<<16) | width));
   MmioWrite32(MDP_DMA_P_IBUF_ADDR,     LCDC_FB_ADDR);
-  MmioWrite32(MDP_DMA_P_IBUF_Y_STRIDE, 480 * 4);
+  MmioWrite32(MDP_DMA_P_IBUF_Y_STRIDE, width * 3);
   MmioWrite32(MDP_DMA_P_OUT_XY,        0x0);         // This must be 0
 
   // Enable
   MmioWrite32(MDP_LCDC_EN, 1);
-}
+}*/
 
 
 EFI_STATUS
@@ -283,15 +286,12 @@ LcdFbDxeInitialize(
   EFI_STATUS Status             = EFI_SUCCESS;
   EFI_HANDLE hUEFIDisplayHandle = NULL;
 
-  TestScreen(0xffffffff);//white
+  // Find the clock controller protocol.  ASSERT if not found.
+  Status = gBS->LocateProtocol (&gEmbeddedClockProtocolGuid, NULL, (VOID **)&gClock);
+  ASSERT_EFI_ERROR (Status);
 
   // Init/reinit LCD
   LcdcInit();
-
-  // Enable
-  MmioWrite32(MDP_LCDC_EN, 0x00000001);
-
-  TestScreen(0xff0000ff);//blue
 
   /* Retrieve frame buffer from pre-SEC bootloader */
   DEBUG(

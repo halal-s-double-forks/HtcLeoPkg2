@@ -48,7 +48,7 @@ mmc_bread(ulong blknr, lbaint_t blkcnt, void *dst)
 {
     int i;
     lbaint_t run_blkcnt = 0;
-    //debug("bread blknr=0x%08lx blkcnt=0x%08lx dst=0x%08lx\n", blknr, blkcnt, dst);
+    DEBUG((EFI_D_ERROR, "bread blknr=0x%08lx blkcnt=0x%08lx dst=0x%08lx\n", blknr, blkcnt, dst));
     if (blkcnt == 0) {
         return 0;
     }
@@ -63,7 +63,7 @@ mmc_bread(ulong blknr, lbaint_t blkcnt, void *dst)
             // Single block read
             if(!read_a_block(blknr, dst))
             {
-               //debug("SD - read_a_block_dm error, blknr= 0x%08lx\n", blknr);
+               DEBUG((EFI_D_ERROR,"SD - read_a_block_dm error, blknr= 0x%08lx\n", blknr));
                return run_blkcnt;
             }
         }
@@ -72,7 +72,7 @@ mmc_bread(ulong blknr, lbaint_t blkcnt, void *dst)
             // Multiple block read using data mover
             if(!read_a_block_dm(blknr, i, dst))
             {
-               //debug("SD - read_a_block_dm error, blknr= 0x%08lx\n", blknr);
+               DEBUG((EFI_D_ERROR, "SD - read_a_block_dm error, blknr= 0x%08lx\n", blknr));
                return run_blkcnt;
             }
         }
@@ -112,19 +112,19 @@ mmc_legacy_init(int verbose)
     if ((((uint32_t)sd_adm_cmd_ptr_list & 0x7) != 0) ||
         (((uint32_t)sd_box_mode_entry & 0x7) != 0))
     {
-        //debug("SD - error ADM structures not 8 byte aligned\n");
+        DEBUG((EFI_D_ERROR, "SD - error ADM structures not 8 byte aligned\n"));
         return rc;
     }
     // SD Init
     if (!SDCn_init(SDC_INSTANCE))
     {
-       //debug("SD - error initializing (SDCn_init)\n");
+       DEBUG((EFI_D_ERROR, "SD - error initializing (SDCn_init)\n"));
        return rc;
     }
     // Run card ID sequence
     if (!card_identification_selection(cid, &rca, &dummy))
     {
-       //debug("SD - error initializing (card_identification_selection)\n");
+       DEBUG((EFI_D_ERROR, "SD - error initializing (card_identification_selection)\n"));
        return rc;
     }
     // Change SD clock configuration, set PWRSAVE and FLOW_ENA
@@ -133,7 +133,7 @@ mmc_legacy_init(int verbose)
                          MCI_CLK__FLOW_ENA___M );
     if (!card_transfer_init(rca, csd, cid))
     {
-       //debug("SD - error initializing (card_transfer_init)\n");
+       DEBUG((EFI_D_ERROR, "SD - error initializing (card_transfer_init)\n"));
        return rc;
     }
 #ifdef USE_4_BIT_BUS_MODE
@@ -144,7 +144,7 @@ mmc_legacy_init(int verbose)
 #endif
     if (!read_SD_status(rca))
     {
-       //debug("SD - error reading SD status\n\r");
+       DEBUG((EFI_D_ERROR, "SD - error reading SD status\n\r"));
        return rc;
     }
     // The card is now in data transfer mode, standby state.
@@ -172,22 +172,26 @@ mmc_legacy_init(int verbose)
  #endif
     if (!card_set_block_size(BLOCK_SIZE))
     {
-        //debug("SD - Error setting block size\n\r");
+        DEBUG((EFI_D_ERROR, "SD - Error setting block size\n\r"));
         return rc;
     }
     // Read the first block of the SD card as a sanity check.
  #ifdef USE_DM
     if(!read_a_block_dm(0, 1, &buffer[0]))
- #else
-    if(!read_a_block(0, &buffer[0]))
- #endif
     {
-       //debug("SD - error first block\n\r");
+       DEBUG((EFI_D_ERROR, "SD - error first block (ADM)\n\r"));
        return rc;
     }
+ #else
+    if(!read_a_block(0, &buffer[0]))
+    {
+       DEBUG((EFI_D_ERROR, "SD - error first block\n\r"));
+       return rc;
+    }
+ #endif
     else
     {
-       //debug("SD - block read successful\n\r");
+       DEBUG((EFI_D_ERROR,"SD - block read successful\n\r"));
     }
     // Valid SD card found
     mmc_dev.if_type = IF_TYPE_SD;

@@ -295,6 +295,7 @@ SdCardInitialize(
         // Enable SD
         DEBUG((EFI_D_ERROR, "SD Card inserted!\n"));
         mmc_legacy_init(0);
+        DEBUG((EFI_D_ERROR, "SD Card inited!\n"));
 
         sdc_dev = mmc_get_dev();
 

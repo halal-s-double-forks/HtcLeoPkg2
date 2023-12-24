@@ -22,103 +22,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307 USA
  */
-#include <common.h>
-#ifndef CONFIG_GENERIC_MMC
-#include <mmc.h>
-#include <part.h>
-#include <fat.h>
-#include <asm/errno.h>
-#include <asm/arch/mmc.h>
-#include <asm/arch/adm.h>
-#include <asm-armv7Scorpion/mmu.h>
-#ifdef USE_PROC_COMM
-#include <asm/arch/proc_comm_clients.h>
-#endif /*USE_PROC_COMM */
-#ifdef CONFIG_MMC
-#ifdef USE_DM
-  #define NUM_BLOCKS_MULT    256
-#else
-  #define NUM_BLOCKS_MULT    1
-#endif
-#define NUM_BLOCKS_STATUS  1024
-static block_dev_desc_t mmc_dev;
-struct sd_parms sdcn;
-uint32_t scr[2];
-int scr_valid = FALSE;
-// Structures for use with ADM
-uint32_t sd_adm_cmd_ptr_list[8] __attribute__ ((aligned(8))); // Must aligned on 8 byte boundary
-uint32_t sd_box_mode_entry[8]   __attribute__ ((aligned(8))); // Must aligned on 8 byte boundary
-static uchar spec_ver;
-static int mmc_ready = 0;
-static int high_capacity = FALSE;
-#define DEBUG
-#ifdef USE_PROC_COMM
-//the desired duty cycle is 50%,
-//using proc_comm with 45Mhz possibly giving too low duty cycle,
-//breaking it.
-enum SD_MCLK_speed
-{	MCLK_144KHz = 144000,
-	MCLK_400KHz = 400000,
-	MCLK_25MHz = 25000000,
-	MCLK_48MHz = 49152000, //true 48Mhz not supported, use next highest
-	MCLK_49MHz = 49152000,
-	MCLK_50MHz = 50000000,
-};
-#else /*USE_PROC_COMM defined*/
-enum SD_MCLK_speed
-{
-//	MCLK_144KHz, //not implemented w/o proc_comm
-	MCLK_400KHz,
-	MCLK_25MHz,
-	MCLK_48MHz,
-//	MCLK_49MHz, //not implemented w/o proc_comm
-	MCLK_50MHz
-};
-#endif /*USE_PROC_COMM */
-// Function prototypes
-static void mmc_decode_cid(uint32_t * resp);
-static void mmc_decode_csd(uint32_t * resp);
-static int sdcc_send_cmd(uint16_t cmd, uint32_t arg, uint32_t response[]);
-static int check_clear_read_status(void);
-static int check_clear_write_status(void);
-static int card_set_block_size(uint32_t size);
-static int read_SCR_register(uint16_t rca);
-static int read_SD_status(uint16_t rca);
-static int switch_mode(uint16_t rca);
-int card_identification_selection(uint32_t cid[], uint16_t* rca, uint8_t* num_of_io_func);
-static int card_transfer_init(uint16_t rca, uint32_t csd[], uint32_t cid[]);
-static int read_a_block(uint32_t block_number, uint32_t read_buffer[]);
-static int read_a_block_dm(uint32_t block_number, uint32_t num_blocks, uint32_t read_buffer[]);
-static int write_a_block(uint32_t block_number, uint32_t write_buffer[], uint16_t rca);
-static int write_a_block_dm(uint32_t block_number, uint32_t num_blocks, uint32_t write_buffer[], uint16_t rca);
-static int SD_MCLK_set(enum SD_MCLK_speed speed);
-static int SDCn_init(uint32_t instance);
-static void sdcard_gpio_config(int instance);
-block_dev_desc_t *mmc_get_dev(int dev)
-{
-	return ((block_dev_desc_t *) & mmc_dev);
-}
-int
-/****************************************************/
-mmc_write(uchar * src, ulong dst, int size)
-/****************************************************/
-{
-    // ZZZZ not implemented yet.  Called by do_mem_cp().
-    return 0;
-}
-#if 0
-int
-/****************************************************/
-mmc_read(ulong src, uchar *dst, int size)
-/****************************************************/
-{
-    // ZZZZ not implemented yet.  Called by do_mem_cp().
-    return 0;
-}
-#endif
+
+#include "SdCardDxe.h"
+
 ulong
 /****************************************************/
-mmc_bread(int dev_num, ulong blknr, lbaint_t blkcnt, void *dst)
+mmc_bread(ulong blknr, lbaint_t blkcnt, void *dst)
 /****************************************************/
 {
     int i;
@@ -266,32 +175,19 @@ mmc_legacy_init(int verbose)
     mmc_decode_csd(csd);
     mmc_decode_cid(cid);
     mmc_ready = 1;
-	fat_register_device(&mmc_dev, 1);	/* partitions start counting with 1 */
+	//fat_register_device(&mmc_dev, 1);	/* partitions start counting with 1 */
     rc = 0;
 	return rc;
 }
-int mmc_ident(block_dev_desc_t * dev)
-{
-	return 0;
-}
-int mmc2info(ulong addr)
-{
-#if 0
-	if (addr >= CONFIG_SYS_MMC_BASE
-	    && addr < CONFIG_SYS_MMC_BASE + (mmc_dev.lba * mmc_dev.blksz)) {
-		return 1;
-	}
-#endif
-    // ZZZZ not implemented yet.  Called by do_mem_cp().
-	return 0;
-}
+
+/*
 #ifdef __GNUC__
 #define likely(x)       __builtin_expect(!!(x), 1)
 #define unlikely(x)     __builtin_expect(!!(x), 0)
 #else
 #define likely(x)	(x)
 #define unlikely(x)	(x)
-#endif
+#endif*/
 #define UNSTUFF_BITS(resp,start,size)					\
 	({								\
 		const int __size = size;				\
@@ -1181,8 +1077,8 @@ static int SD_MCLK_set(enum SD_MCLK_speed speed)
 #ifdef USE_PROC_COMM
     //SDCn_NS_REG clk enable bits are turned on automatically as part of
     //setting clk speed. No need to enable sdcard clk explicitely
-    proc_comm_set_sdcard_clk(sdcn.instance, speed);
-    debug("clkrate_hz=%lu\n",proc_comm_get_sdcard_clk(sdcn.instance));
+    pcom_set_sdcard_clk(sdcn.instance, speed);
+    debug("clkrate_hz=%lu\n",pcom_get_sdcard_clk(sdcn.instance));
 #else /*USE_PROC_COMM not defined */
    switch (speed)
    {
@@ -1260,7 +1156,7 @@ static int SDCn_init(uint32_t instance)
    }
 #ifdef USE_PROC_COMM
    //switch on sd card power. The voltage regulator used is board specific
-   proc_comm_sdcard_power(1); //enable
+   pcom_sdcard_power(1); //enable
 #endif
    // Set the appropriate bit in GLBL_CLK_ENA to start the HCLK
    // Save the initial value of the bit for restoring later
@@ -1274,11 +1170,11 @@ static int SDCn_init(uint32_t instance)
    }
    debug("AFTER_ENABLE:: GLBL_CLK_ENA=0x%08x\n",IO_READ32(GLBL_CLK_ENA));
 #else /* USE_PROC_COMM defined */
-   sdcn.glbl_clk_ena_initial =  proc_comm_is_sdcard_pclk_enabled(sdcn.instance);
+   sdcn.glbl_clk_ena_initial =  pcom_is_sdcard_pclk_enabled(sdcn.instance);
    debug("sdcn.glbl_clk_ena_initial = %d\n", sdcn.glbl_clk_ena_initial);
-   proc_comm_enable_sdcard_pclk(sdcn.instance);
+   pcom_enable_sdcard_pclk(sdcn.instance);
    debug("AFTER_ENABLE:: sdc_clk_enable=%d\n",
-          proc_comm_is_sdcard_pclk_enabled(sdcn.instance));
+          pcom_is_sdcard_pclk_enabled(sdcn.instance));
 #endif /*USE_PROC_COMM*/
    // Set SD MCLK to 400KHz for card detection
    SD_MCLK_set(MCLK_400KHz);
@@ -1326,10 +1222,10 @@ void SDCn_deinit(uint32_t instance)
         if (sdcn.glbl_clk_ena_initial == 0)
         {
 #ifdef USE_PROC_COMM
-	    proc_comm_disable_sdcard_pclk(sdcn.instance);
+	    pcom_disable_sdcard_pclk(sdcn.instance);
 	    //verify
             debug("AFTER_ENABLE:: sdc_clk_enable=%d\n",
-                   proc_comm_is_sdcard_pclk_enabled(sdcn.instance));
+                   pcom_is_sdcard_pclk_enabled(sdcn.instance));
 #else
             IO_WRITE32(GLBL_CLK_ENA, IO_READ32(GLBL_CLK_ENA) & ~sdcn.glbl_clk_ena_mask);
 #endif /*USE_PROC_COMM*/
@@ -1343,7 +1239,7 @@ void SDCn_deinit(uint32_t instance)
 #ifdef USE_PROC_COMM
     //sd power was unconditionally switched on ..
     //so switch off unconditionally
-    proc_comm_sdcard_power(0); //disable
+    pcom_sdcard_power(0); //disable
 #endif
 }
 static void sdcard_gpio_config(int instance)
@@ -1402,8 +1298,6 @@ static void sdcard_gpio_config(int instance)
       break;
 }
 #else /*USE_PROC_COMM defined */
-	proc_comm_sdcard_gpio_config(instance);
+	pcom_sdcard_gpio_config(instance);
 #endif /*USE_PROC_COMM*/
 } /*sdcard_gpio_config()*/
-#endif /* CONFIG_MMC */
-#endif /* CONFIG_GENERIC_MMC */

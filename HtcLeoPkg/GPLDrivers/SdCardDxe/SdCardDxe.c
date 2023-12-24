@@ -37,16 +37,9 @@
 
 #include <Protocol/BlockIo.h>
 #include <Protocol/DevicePath.h>
-
-#include <Library/gpio.h>
-#include <Library/Sdcard.h>
-#include <Chipset/iomap.h>
-#include <Library/reg.h>
-#include <Chipset/gpio.h>
-
-#include <Library/adm.h>
-#include <Library/pcom_clients.h>
 #include <Protocol/GpioTlmm.h>
+
+#include "SdCardDxe.h"
 
 // Cached copy of the Hardware Gpio protocol instance
 TLMM_GPIO *gGpio = NULL;
@@ -167,7 +160,7 @@ MMCHSReadBlocks(
         return EFI_SUCCESS;
     }
 
-	//ret = MmcReadInternal((UINT64) Lba * 512, Buffer, BufferSize);
+	ret = mmc_dev.block_read( (ulong)Lba, (lbaint_t)BufferSize, Buffer);
 	
 	if (ret == 1)
     {
@@ -299,15 +292,18 @@ SdCardInitialize(
     {
         // Enable SD
         DEBUG((EFI_D_ERROR, "SD Card inserted!\n"));
-        //mmc_legacy_init(0);
+        mmc_legacy_init(0);
 
-        UINT8 BlkDump[512];
-		ZeroMem(BlkDump, 512);
+        gMMCHSMedia.LastBlock = mmc_dev.lba;
+        gMMCHSMedia.BlockSize = mmc_deb.blksz;
+
+        UINT8 BlkDump[gMMCHSMedia.BlockSize];
+		ZeroMem(BlkDump, gMMCHSMedia.BlockSize);
 		BOOLEAN FoundMbr = FALSE;
 
 		for (UINTN i = 0; i <= MIN(gMMCHSMedia.LastBlock, 50); i++)
 		{
-            int blk = mmc_bread(i, 1, &BlkDump);
+            int blk = mmc_dev.block_read(i, 1, &BlkDump);//mmc_bread(i, 1, &BlkDump);
             if (blk)
             {
                 if (BlkDump[510] == 0x55 && BlkDump[511] == 0xAA)

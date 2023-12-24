@@ -59,6 +59,7 @@
 
 #include <Library/UbootEnvLib.h>
 #include <Library/adm.h>
+#include <Library/reg.h>
 
 
 int adm_start_transfer(uint32_t adm_chn, uint32_t *cmd_ptr_list)
@@ -67,7 +68,6 @@ int adm_start_transfer(uint32_t adm_chn, uint32_t *cmd_ptr_list)
     uint32_t adm_status;
     uint32_t adm_results;
     uint32_t adm_addr_shift;
-    uint32_t start;
     uint32_t delay_count = 100;
 
 

@@ -41,6 +41,8 @@
 
 #include "SdCardDxe.h"
 
+static block_dev_desc_t *sdc_dev;
+
 // Cached copy of the Hardware Gpio protocol instance
 TLMM_GPIO *gGpio = NULL;
 
@@ -160,7 +162,7 @@ MMCHSReadBlocks(
         return EFI_SUCCESS;
     }
 
-	ret = mmc_dev.block_read( (ulong)Lba, (lbaint_t)BufferSize, Buffer);
+	ret = sdc_dev->block_read( (ulong)Lba, (lbaint_t)BufferSize, (void *)Buffer);
 	
 	if (ret == 1)
     {
@@ -294,8 +296,10 @@ SdCardInitialize(
         DEBUG((EFI_D_ERROR, "SD Card inserted!\n"));
         mmc_legacy_init(0);
 
-        gMMCHSMedia.LastBlock = mmc_dev.lba;
-        gMMCHSMedia.BlockSize = mmc_deb.blksz;
+        sdc_dev = mmc_get_dev();
+
+        gMMCHSMedia.LastBlock = sdc_dev->lba;
+        gMMCHSMedia.BlockSize = sdc_dev->blksz;
 
         UINT8 BlkDump[gMMCHSMedia.BlockSize];
 		ZeroMem(BlkDump, gMMCHSMedia.BlockSize);
@@ -303,7 +307,7 @@ SdCardInitialize(
 
 		for (UINTN i = 0; i <= MIN(gMMCHSMedia.LastBlock, 50); i++)
 		{
-            int blk = mmc_dev.block_read(i, 1, &BlkDump);//mmc_bread(i, 1, &BlkDump);
+            int blk = sdc_dev->block_read(i, 1, &BlkDump);//mmc_bread(i, 1, &BlkDump);
             if (blk)
             {
                 if (BlkDump[510] == 0x55 && BlkDump[511] == 0xAA)

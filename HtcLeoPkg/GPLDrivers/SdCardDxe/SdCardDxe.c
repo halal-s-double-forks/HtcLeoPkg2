@@ -162,7 +162,7 @@ MMCHSReadBlocks(
         return EFI_SUCCESS;
     }
 
-	ret = sdc_dev->block_read( (ulong)Lba, (lbaint_t)BufferSize, (void *)Buffer);
+	ret = sdc_dev->block_read(SDC_INSTANCE, (ulong)Lba, (lbaint_t)BufferSize, (void *)Buffer);
 	
 	if (ret == 1)
     {
@@ -308,7 +308,7 @@ SdCardInitialize(
 
 		for (UINTN i = 0; i <= MIN(gMMCHSMedia.LastBlock, 50); i++)
 		{
-            int blk = sdc_dev->block_read(i, 1, &BlkDump);//mmc_bread(i, 1, &BlkDump);
+            int blk = sdc_dev->block_read(SDC_INSTANCE, i, 1, &BlkDump);
             if (blk)
             {
                 if (BlkDump[510] == 0x55 && BlkDump[511] == 0xAA)

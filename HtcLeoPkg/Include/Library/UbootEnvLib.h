@@ -142,7 +142,10 @@ typedef ulong lbaint_t;
 //#else
 //#define dprintf(level, fmt, ...)
 //#endif*/
-#define debug(message) DEBUG((EFI_D_ERROR, message))
+//#define debug(message) DEBUG((EFI_D_ERROR, message))
+#define debug(fmt, ...)
+#define printf(fmt, ...)
+#define sprintf(fmt, ...)
 
 //#define ntohl(n) SwapBytes32(n)
 

@@ -1539,6 +1539,34 @@ static int SDCn_init(uint32_t instance)
       return(FALSE);        // Error: incorrect instance number
    }
 
+	// clear the framebuffer
+	VOID
+PaintScreen(
+  IN  UINTN   BgColor
+)
+{
+  // Code from FramebufferSerialPortLib
+	char* Pixels = (void*)FixedPcdGet32(PcdMipiFrameBufferAddress);
+
+	// Set to black color.
+	for (UINTN i = 0; i < Width; i++)
+	{
+		for (UINTN j = 0; j < Height; j++)
+		{
+			// Set pixel bit
+			for (UINTN p = 0; p < (Bpp / 8); p++)
+			{
+				*Pixels = (unsigned char)BgColor;
+				BgColor = BgColor >> 8;
+				Pixels++;
+			}
+		}
+	}
+}
+
+	  PaintScreen(0xff000000);
+
+	
 #ifdef USE_PROC_COMM
    //switch on sd card power. The voltage regulator used is board specific
    pcom_sdcard_power(1); //enable

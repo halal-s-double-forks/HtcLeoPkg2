@@ -130,7 +130,6 @@ APRIORI DXE {
   INF HtcLeoPkg/Drivers/KeypadDxe/KeypadDxe.inf
   INF HtcLeoPkg/GPLDrivers/I2CDxe/I2CDxe.inf
   INF HtcLeoPkg/Drivers/MicroPDxe/MicroPDxe.inf
-  # INF HtcLeoPkg/GPLDrivers/UsbDxe/UsbDxe.inf
 
   #
   # Virtual Keyboard

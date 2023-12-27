@@ -1,2 +1,0 @@
-Based on the qsd8250 u-boot driver :
- * https://chromium.googlesource.com/chromiumos/third_party/u-boot/+/refs/heads/0.12.433.B/cpu/armv7Scorpion/QSD8x50/ehci.c

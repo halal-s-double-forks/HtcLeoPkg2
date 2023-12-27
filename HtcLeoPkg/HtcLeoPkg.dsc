@@ -26,7 +26,7 @@
   SKUID_IDENTIFIER               = DEFAULT
   FLASH_DEFINITION               = HtcLeoPkg/HtcLeoPkg.fdf
 
-  DEFINE USE_SCREEN_FOR_SERIAL_OUTPUT = TRUE
+  DEFINE USE_SCREEN_FOR_SERIAL_OUTPUT = 0
 
 !include HtcLeoPkg/CommonDsc.dsc.inc
 
@@ -234,7 +234,6 @@
   HtcLeoPkg/Drivers/KeypadDxe/KeypadDxe.inf
   HtcLeoPkg/GPLDrivers/I2CDxe/I2CDxe.inf
   HtcLeoPkg/Drivers/MicroPDxe/MicroPDxe.inf
-  HtcLeoPkg/GPLDrivers/UsbDxe/UsbDxe.inf
 
   #
   # Virtual Keyboard

@@ -1,6 +1,7 @@
 // driver configs
 #define USE_PROC_COMM
 #define USE_DM
+#define USE_HIGH_SPEED_MODE
 
 #include <Library/UbootEnvLib.h>
 // must come in order

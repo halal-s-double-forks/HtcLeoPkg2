@@ -59,7 +59,7 @@ typedef struct block_dev_desc {
 	char			product[20+1];	/* IDE Serial no, SCSI product */
 	char			revision[8+1];	/* firmware revision */
 	unsigned long	(*block_read)(int dev_num, unsigned long start, unsigned long blkcnt, void *buffer);
-	unsigned long	(*block_write)(int dev_num, unsigned long start, unsigned long blkcnt, const void *buffer);
+	unsigned long	(*block_write)(int dev_num, unsigned long start, unsigned long blkcnt, void *buffer);
 	unsigned long   (*block_erase)(int dev_num, unsigned long start, unsigned long blkcnt);
 	void			*priv;			/* driver private struct pointer */
 } block_dev_desc_t;

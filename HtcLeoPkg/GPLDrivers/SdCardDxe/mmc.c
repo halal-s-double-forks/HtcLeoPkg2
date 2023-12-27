@@ -38,6 +38,7 @@ struct sd_parms sdcn;
 
 uint32_t scr[2];
 int scr_valid = FALSE;
+uint16_t rca;
 
 // Structures for use with ADM
 uint32_t sd_adm_cmd_ptr_list[8] __attribute__ ((aligned(8))); // Must aligned on 8 byte boundary
@@ -180,6 +181,67 @@ mmc_bread(int dev_num, ulong blknr, lbaint_t blkcnt, void *dst)
 	return run_blkcnt;
 }
 
+// TODO: Actually implement
+ulong
+/****************************************************/
+mmc_bwrite(int dev_num, ulong blknr, lbaint_t blkcnt, void *dst)
+/****************************************************/
+{
+
+    int i;
+    lbaint_t run_blkcnt = 0;
+
+    debug("bwrite blknr=0x%08lx blkcnt=0x%08lx dst=0x%08lx\n", blknr, blkcnt, dst);
+
+    if (blkcnt == 0) {
+        return 0;
+    }
+
+    /* Break up writes into multiples of NUM_BLOCKS_MULT */
+    while (blkcnt != 0) {
+        if (blkcnt >= NUM_BLOCKS_MULT)
+           i = NUM_BLOCKS_MULT;
+        else
+           i = blkcnt;
+
+        if (i==1)
+        {
+            // Single block read
+            if(!write_a_block(blknr, dst, rca))
+            {
+               debug("SD - write_a_block_dm error, blknr= 0x%08lx\n", blknr);
+               return run_blkcnt;
+            }
+        }
+        else
+        {
+            // Multiple block read using data mover
+            if(!write_a_block_dm(blknr, i, dst, rca))
+            {
+               debug("SD - write_a_block_dm error, blknr= 0x%08lx\n", blknr);
+               return run_blkcnt;
+            }
+        }
+
+        run_blkcnt += i;
+        // Output status every NUM_BLOCKS_STATUS blocks
+        if ((run_blkcnt % NUM_BLOCKS_STATUS) == 0)
+        {
+           debug(".");
+        }
+
+        blknr += i;
+        blkcnt -= i;
+        dst += (BLOCK_SIZE * i);
+    }
+
+    if (run_blkcnt >= NUM_BLOCKS_STATUS) {
+        debug("\n");
+    }
+
+	return run_blkcnt;
+}
+
 
 int
 /****************************************************/
@@ -190,7 +252,6 @@ mmc_legacy_init(int verbose)
     int rc = -ENODEV;
     uint32_t cid[4] = {0};
     uint32_t csd[4] = {0};
-    uint16_t rca;
     uint8_t  dummy;
     uint32_t buffer[128];
     uint32_t temp32;
@@ -303,11 +364,7 @@ mmc_legacy_init(int verbose)
     mmc_decode_cid(cid);
     mmc_ready = 1;
 
-	fat_register_device(&mmc_dev, 1);	/* partitions start counting with 1 */
-
-    rc = 0;
-
-	return rc;
+	return 0;
 }
 
 int mmc_ident(block_dev_desc_t * dev)
@@ -498,6 +555,7 @@ static void mmc_decode_csd(uint32_t * resp)
 	mmc_dev.type = DEV_TYPE_HARDDISK;
 	mmc_dev.removable = 0;
 	mmc_dev.block_read = mmc_bread;
+   mmc_dev.block_write = mmc_bwrite;
 
 	printf("Detected: %lu blocks of %lu bytes (%luMB) ",
 		mmc_dev.lba,
@@ -1086,12 +1144,7 @@ static int read_a_block(uint32_t block_number, uint32_t read_buffer[])
    uint32_t mci_status, response[4];
    uint32_t address;
 
-   // Verify buffer address is mapped in the MMU.
-   if (mmu_is_mapped((uint32_t)read_buffer) == 0)
-   {
-       printf("ERROR: Invalid target address\n");
-       return(FALSE);
-   }
+   // TODO? Verify buffer address is mapped in the MMU.
 
    if (high_capacity == FALSE)
    {
@@ -1151,12 +1204,7 @@ static int read_a_block_dm(uint32_t block_number, uint32_t num_blocks, uint32_t 
    uint32_t num_rows;
    uint32_t addr_shft;
 
-   // Verify buffer address is mapped in the MMU.
-   if (mmu_is_mapped((uint32_t)read_buffer) == 0)
-   {
-       printf("ERROR: Invalid target address\n");
-       return(FALSE);
-   }
+   // TODO? Verify buffer address is mapped in the MMU.
 
    if (high_capacity == FALSE)
    {
@@ -1233,12 +1281,7 @@ static int write_a_block(uint32_t block_number, uint32_t write_buffer[], uint16_
    uint32_t mci_status, response[4];
    uint32_t address;
 
-   // Verify buffer address is mapped in the MMU.
-   if (mmu_is_mapped((uint32_t)write_buffer) == 0)
-   {
-       printf("ERROR: Invalid source address\n");
-       return(FALSE);
-   }
+   // TODO? Verify buffer address is mapped in the MMU.
 
    if (high_capacity == FALSE)
    {
@@ -1310,12 +1353,7 @@ static int write_a_block_dm(uint32_t block_number, uint32_t num_blocks,
    uint32_t address;
    uint32_t addr_shft;
 
-   // Verify buffer address is mapped in the MMU.
-   if (mmu_is_mapped((uint32_t)write_buffer) == 0)
-   {
-       printf("ERROR: Invalid source address\n");
-       return(FALSE);
-   }
+   // TODO? Verify buffer address is mapped in the MMU.
 
    if (high_capacity == FALSE)
    {
@@ -1410,8 +1448,8 @@ static int SD_MCLK_set(enum SD_MCLK_speed speed)
 #ifdef USE_PROC_COMM
     //SDCn_NS_REG clk enable bits are turned on automatically as part of
     //setting clk speed. No need to enable sdcard clk explicitely
-    proc_comm_set_sdcard_clk(sdcn.instance, speed);
-    debug("clkrate_hz=%lu\n",proc_comm_get_sdcard_clk(sdcn.instance));
+    pcom_set_sdcard_clk(sdcn.instance, speed);
+    debug("clkrate_hz=%lu\n",pcom_get_sdcard_clk(sdcn.instance));
 #else /*USE_PROC_COMM not defined */
    switch (speed)
    {
@@ -1497,7 +1535,7 @@ static int SDCn_init(uint32_t instance)
 
 #ifdef USE_PROC_COMM
    //switch on sd card power. The voltage regulator used is board specific
-   proc_comm_sdcard_power(1); //enable
+   pcom_sdcard_power(1); //enable
 #endif
    // Set the appropriate bit in GLBL_CLK_ENA to start the HCLK
    // Save the initial value of the bit for restoring later
@@ -1512,11 +1550,11 @@ static int SDCn_init(uint32_t instance)
    debug("AFTER_ENABLE:: GLBL_CLK_ENA=0x%08x\n",IO_READ32(GLBL_CLK_ENA));
 
 #else /* USE_PROC_COMM defined */
-   sdcn.glbl_clk_ena_initial =  proc_comm_is_sdcard_pclk_enabled(sdcn.instance);
+   sdcn.glbl_clk_ena_initial =  pcom_is_sdcard_pclk_enabled(sdcn.instance);
    debug("sdcn.glbl_clk_ena_initial = %d\n", sdcn.glbl_clk_ena_initial);
-   proc_comm_enable_sdcard_pclk(sdcn.instance);
+   pcom_enable_sdcard_pclk(sdcn.instance);
    debug("AFTER_ENABLE:: sdc_clk_enable=%d\n",
-          proc_comm_is_sdcard_pclk_enabled(sdcn.instance));
+          pcom_is_sdcard_pclk_enabled(sdcn.instance));
 #endif /*USE_PROC_COMM*/
 
    // Set SD MCLK to 400KHz for card detection
@@ -1578,10 +1616,10 @@ void SDCn_deinit(uint32_t instance)
         if (sdcn.glbl_clk_ena_initial == 0)
         {
 #ifdef USE_PROC_COMM
-	    proc_comm_disable_sdcard_pclk(sdcn.instance);
+	    pcom_disable_sdcard_pclk(sdcn.instance);
 	    //verify
             debug("AFTER_ENABLE:: sdc_clk_enable=%d\n",
-                   proc_comm_is_sdcard_pclk_enabled(sdcn.instance));
+                   pcom_is_sdcard_pclk_enabled(sdcn.instance));
 #else
             IO_WRITE32(GLBL_CLK_ENA, IO_READ32(GLBL_CLK_ENA) & ~sdcn.glbl_clk_ena_mask);
 #endif /*USE_PROC_COMM*/
@@ -1599,7 +1637,7 @@ void SDCn_deinit(uint32_t instance)
 #ifdef USE_PROC_COMM
     //sd power was unconditionally switched on ..
     //so switch off unconditionally
-    proc_comm_sdcard_power(0); //disable
+    pcom_sdcard_power(0); //disable
 #endif
 }
 
@@ -1678,6 +1716,6 @@ static void sdcard_gpio_config(int instance)
       break;
 }
 #else /*USE_PROC_COMM defined */
-	proc_comm_sdcard_gpio_config(instance);
+	pcom_sdcard_gpio_config(instance);
 #endif /*USE_PROC_COMM*/
 } /*sdcard_gpio_config()*/

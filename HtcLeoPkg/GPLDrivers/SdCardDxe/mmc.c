@@ -1540,6 +1540,11 @@ static int SDCn_init(uint32_t instance)
    }
 
 	// clear the framebuffer
+UINTN Width = FixedPcdGet32(PcdMipiFrameBufferWidth);
+UINTN Height = FixedPcdGet32(PcdMipiFrameBufferHeight);
+UINTN Bpp = FixedPcdGet32(PcdMipiFrameBufferPixelBpp);
+UINTN FbAddr = FixedPcdGet32(PcdMipiFrameBufferAddress);
+	
 	VOID
 PaintScreen(
   IN  UINTN   BgColor

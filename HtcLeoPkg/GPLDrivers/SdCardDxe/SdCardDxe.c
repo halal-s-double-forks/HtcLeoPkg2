@@ -162,8 +162,8 @@ MMCHSReadBlocks(
         return EFI_SUCCESS;
     }
 
-	ret = sdc_dev->block_read(SDC_INSTANCE, (ulong)Lba, (lbaint_t)BufferSize, (void *)Buffer);
-	
+	//ret = sdc_dev->block_read(SDC_INSTANCE, (ulong)Lba, (lbaint_t)BufferSize, (void *)Buffer);
+
 	if (ret == 1)
     {
         return EFI_SUCCESS;
@@ -296,11 +296,12 @@ SdCardInitialize(
         DEBUG((EFI_D_ERROR, "SD Card inserted!\n"));
         mmc_legacy_init(0);
         DEBUG((EFI_D_ERROR, "SD Card inited!\n"));
+        MicroSecondDelay(2*1000000);
 
         sdc_dev = mmc_get_dev();
 
         gMMCHSMedia.LastBlock = sdc_dev->lba;
-        gMMCHSMedia.BlockSize = sdc_dev->blksz;
+        gMMCHSMedia.BlockSize = 512;//sdc_dev->blksz;
 
         UINT8 BlkDump[gMMCHSMedia.BlockSize];
 		ZeroMem(BlkDump, gMMCHSMedia.BlockSize);
@@ -309,15 +310,16 @@ SdCardInitialize(
 		for (UINTN i = 0; i <= MIN(gMMCHSMedia.LastBlock, 50); i++)
 		{
             int blk = sdc_dev->block_read(SDC_INSTANCE, i, 1, &BlkDump);
+            MicroSecondDelay(2*1000000);
             if (blk)
             {
                 if (BlkDump[510] == 0x55 && BlkDump[511] == 0xAA)
                 {
-                    DEBUG((EFI_D_INFO, "MBR found at %d \n", i));
+                    DEBUG((EFI_D_ERROR, "MBR found at %d \n", i));
                     FoundMbr = TRUE;
                     break;
                 }
-                DEBUG((EFI_D_INFO, "MBR not found at %d \n", i));
+                DEBUG((EFI_D_ERROR, "MBR not found at %d \n", i));
             }
 		}    
         if (!FoundMbr)
@@ -325,7 +327,11 @@ SdCardInitialize(
             DEBUG((EFI_D_ERROR, "(Protective) MBR not found \n"));
             CpuDeadLoop();
         }
-
+        else
+        {
+            DEBUG((EFI_D_ERROR, "(Protective) MBR found!!! \n"));
+            MicroSecondDelay(5*1000000);
+        }
 		//Publish BlockIO.
 		Status = gBS->InstallMultipleProtocolInterfaces(
 			&ImageHandle,

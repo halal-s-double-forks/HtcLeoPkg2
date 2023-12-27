@@ -123,8 +123,8 @@ typedef ulong lbaint_t;
 #define INFO DEBUG_INFO
 #define SPEW DEBUG_VERBOSE
 
-//#if !defined(MDEPKG_NDEBUG)
-#define dprintf(level, fmt, ...) do { \
+//#if !defined(MDEPKG_NDEBUG)*/
+#define debug(fmt, ...) do { \
                                    if (DebugPrintEnabled ()) { \
                                      CHAR8 __printbuf[100]; \
                                      UINTN __printindex; \
@@ -136,14 +136,11 @@ typedef ulong lbaint_t;
                                        if (__printbuf[__printindex-1]=='%' && __printbuf[__printindex]=='s') \
                                          __printbuf[__printindex] = 'a'; \
                                      } \
-                                     DEBUG(((level), __printbuf, ##__VA_ARGS__)); \
+                                     DEBUG(((EFI_D_ERROR), __printbuf, ##__VA_ARGS__)); \
                                    } \
-                                 } while(0)
-//#else
-//#define dprintf(level, fmt, ...)
-//#endif*/
+                                 } while(0)                              
 //#define debug(message) DEBUG((EFI_D_ERROR, message))
-#define debug(fmt, ...)
+//#define debug(fmt, ...)
 #define printf(fmt, ...)
 #define sprintf(fmt, ...)
 

@@ -82,7 +82,7 @@ static int check_clear_write_status(void);
 static int card_set_block_size(uint32_t size);
 static int read_SCR_register(uint16_t rca);
 static int read_SD_status(uint16_t rca);
-static int switch_mode(uint16_t rca);
+int switch_mode(uint16_t rca);
 int card_identification_selection(uint32_t cid[], uint16_t* rca, uint8_t* num_of_io_func);
 static int card_transfer_init(uint16_t rca, uint32_t csd[], uint32_t cid[]);
 static int read_a_block(uint32_t block_number, uint32_t read_buffer[]);
@@ -254,8 +254,9 @@ mmc_legacy_init(int verbose)
     uint32_t csd[4] = {0};
     uint8_t  dummy;
     uint32_t buffer[128];
+#ifdef USE_4_BIT_BUS_MODE
     uint32_t temp32;
-
+#endif
 	/* Reset device interface type */
 	mmc_dev.if_type = IF_TYPE_UNKNOWN;
 
@@ -266,6 +267,7 @@ mmc_legacy_init(int verbose)
         debug("SD - error ADM structures not 8 byte aligned\n");
         return rc;
     }
+    debug("SD - ADM structures 8 byte aligned\n");
 
     // SD Init
     if (!SDCn_init(SDC_INSTANCE))
@@ -273,6 +275,7 @@ mmc_legacy_init(int verbose)
        debug("SD - error initializing (SDCn_init)\n");
        return rc;
     }
+    debug("SD - initialized (SDCn_init)\n");
 
     // Run card ID sequence
     if (!card_identification_selection(cid, &rca, &dummy))
@@ -280,6 +283,7 @@ mmc_legacy_init(int verbose)
        debug("SD - error initializing (card_identification_selection)\n");
        return rc;
     }
+    debug("SD - card_identification_selection\n");
 
     // Change SD clock configuration, set PWRSAVE and FLOW_ENA
     IO_WRITE32(sdcn.base + MCI_CLK, IO_READ32(sdcn.base + MCI_CLK) |
@@ -291,6 +295,7 @@ mmc_legacy_init(int verbose)
        debug("SD - error initializing (card_transfer_init)\n");
        return rc;
     }
+    debug("SD - card_transfer_init\n");
 
 #ifdef USE_4_BIT_BUS_MODE
     // Card is now in four bit mode, do the same with the clock
@@ -858,7 +863,7 @@ static int read_SD_status(uint16_t rca)
    return(TRUE);
 }
 
-
+#ifdef USE_HIGH_SPEED_MODE
 static int switch_mode(uint16_t rca)
 {
 
@@ -1000,6 +1005,7 @@ static int switch_mode(uint16_t rca)
 
    return(TRUE);
 }
+#endif
 
 int card_identification_selection(uint32_t cid[],
                                          uint16_t* rca,

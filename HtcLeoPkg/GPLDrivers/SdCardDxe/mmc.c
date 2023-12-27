@@ -1540,36 +1540,13 @@ static int SDCn_init(uint32_t instance)
    }
 
 	// clear the framebuffer
-UINTN Width = FixedPcdGet32(PcdMipiFrameBufferWidth);
-UINTN Height = FixedPcdGet32(PcdMipiFrameBufferHeight);
-UINTN Bpp = FixedPcdGet32(PcdMipiFrameBufferPixelBpp);
-	
-	VOID
-PaintScreen(
-  IN  UINTN   BgColor
-)
-{
-  // Code from FramebufferSerialPortLib
-	char* Pixels = (void*)FixedPcdGet32(PcdMipiFrameBufferAddress);
-
-	// Set to black color.
-	for (UINTN i = 0; i < Width; i++)
-	{
-		for (UINTN j = 0; j < Height; j++)
-		{
-			// Set pixel bit
-			for (UINTN p = 0; p < (Bpp / 8); p++)
-			{
-				*Pixels = (unsigned char)BgColor;
-				BgColor = BgColor >> 8;
-				Pixels++;
-			}
-		}
-	}
-}
-
-	  PaintScreen(0xff000000);
-
+  /*  char* base = (char*)0x83d200000;
+    for (int i = 0; i < 0xC00000; i += 4) {
+        base[i] = 0;      // Blue component
+        base[i + 1] = 0;  // Green component
+        base[i + 2] = 0;  // Red component
+        base[i + 3] = 0;        // Full opacity
+    }*/
 	
 #ifdef USE_PROC_COMM
    //switch on sd card power. The voltage regulator used is board specific
